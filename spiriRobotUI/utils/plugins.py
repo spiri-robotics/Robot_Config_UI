@@ -1,0 +1,84 @@
+from pathlib import Path
+
+
+class Plugin:
+    """Base class for all add-ons. This class should not be initialized directly; use subclasses."""
+
+    def __init__(self, name: str, logo: str | Path, repo: str, version: str):
+        self.name = name
+        self.logo = logo
+        self.repo = repo
+        self.version = version
+        self.is_installed = False
+        self.stats = {}
+
+    def install(self):
+        if not self.is_installed:
+            self.is_installed = True
+            print(f"{self.name} installed")
+        else:
+            print(f"Error: {self.name} already installed")
+
+    def uninstall(self):
+        if self.is_installed:
+            self.is_installed = False
+            print(f"{self.name} uninstalled")
+        else:
+            print(f"Error: {self.name} not installed")
+
+
+class InstalledPlugin(Plugin):
+
+    def __init__(self, name, logo, repo, version):
+        super().__init__(name, logo, repo, version)
+        self.is_enabled = False
+
+    def enable(self):
+        if not self.is_enabled:
+            # call get_stats()
+            self.is_enabled = True
+            print(f"{self.name} enabled")
+        else:
+            print(f"Error: {self.name} already enabled")
+
+    def disable(self):
+        if self.is_enabled:
+            self.is_enabled = False
+            print(f"{self.name} disabled")
+        else:
+            print(f"Error: {self.name} not enabled")
+
+    def save_edits(self, edits: dict):
+        print()
+
+    def get_stats(self):
+        status = "calculate status here"
+        cpu = "calculate cpu here"
+        memory = "calculate memory here"
+        disk = "calulate disk here"
+        self.stats["status"] = status
+        self.stats["cpu"] = cpu
+        self.stats["memory"] = memory
+        self.stats["disk"] = disk
+
+    def get_status(self):
+        print("fetching and returning status")
+
+    def get_cpu(self):
+        cores = "command to fetch number of cpu cores"
+        used = "command to fetch amount used, type float"
+        total = "command to fetch total amount, type float"
+        notes = "calulations will likely happen to convert into optimal size unit"
+        print("Calculating and returning CPU usage (cores/used/total)")
+
+    def get_memory(self):
+        used = "command to fetch amount used, type float"
+        total = "command to fetch total amount, type float"
+        notes = "calulations will likely happen to convert into optimal size unit"
+        print("Calculating and returning memory usage (used/total)")
+
+    def get_disk(self):
+        used = "command to fetch amount used, type float"
+        total = "command to fetch total amount, type float"
+        notes = "calulations will likely happen to convert into optimal size unit"
+        print("Calculating and returning disk usage (used/total)")
