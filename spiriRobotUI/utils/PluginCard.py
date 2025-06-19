@@ -1,36 +1,7 @@
 from nicegui import ui
 import asyncio
 from ui.ToggleButton import ToggleButton
-
-class Plugin:
-    def __init__(self, name, logo, repo) -> None:
-        self.name = "testing"
-        self.logo = "temp"
-        self.repo = ""
-        self.version = "v1"
-        self.is_installed = False
-
-    async def install(self):
-        print(f"installed")
-    async def uninstall(self):
-        print("uninstalled")
-
-class InstalledPlugin(Plugin):
-    def __init__(self, name, logo, repo):
-        super().__init__(name, logo, repo)
-        self.is_enabled = False
-        self.current_stats = {
-            'status': 'N/A',
-            'cpu': 1.0,
-            'disk': 1.0,
-            'memory':1.0
-        }
-
-    async def enable(self):
-        print("ALIVVEEEE")
-    async def disable(self):
-        print("DEADDDD")
-
+from spiriRobotUI.utils.plugins import Plugin, InstalledPlugin
 class PluginStoreCard:
     def __init__(self, plugin: Plugin):
         self.base_card_classes = ""
@@ -70,18 +41,24 @@ class PluginInstalledCard:
                 )
                 
                 ui.markdown("CPU usage: ")
-                cpu_progress = ui.linear_progress(max=100.0, min=0.0).bind_value_from(self.plugin.current_stats['cpu'], "value")
+                cpu_progress = ui.linear_progress(
+                    max=100, 
+                    min=0, 
+                    step=0.01
+                    ).bind_value_from(self.plugin.current_stats['cpu'], "value")
                 
                 ui.markdown("Memory usage: ")
                 memory_progress = ui.linear_progress(
                     max=self.plugin.base_stats['memory max'], 
-                    min=0.0
+                    min=0,
+                    step=0.01
                     ).bind_value_from(self.plugin.current_stats['memory'])
                 
                 ui.markdown("Disk usage: ")
                 disk_progress = ui.linear_progress(
                     max=self.plugin.base_stats['disk max'], 
-                    min=0.0
+                    min=0,
+                    step=0.01
                     ).bind_value_from(self.plugin.current_stats['disk'])
                 
                 
