@@ -21,8 +21,8 @@ def add_new_plugin_card(plugin):
 
 @ui.page("/")
 async def main_ui():
-        header()
         sidebar()
+        header()
         ui.markdown("## Plugin Coordinator")
         ui.label("Your favourite plugins, now all in one place.")
 
