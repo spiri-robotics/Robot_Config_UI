@@ -2,7 +2,7 @@ from nicegui import ui
 from pathlib import Path
 from spiriRobotUI.pages.PluginsPage import main_ui as plugins_page
 
-favicon = "spiriRobotUI/icons/ConfigUILogo.png"
+favicon = "spiriRobotUI/icons/spiri_drone_ui_logo.svg"
 
 ui.run(title='Robot Config UI',
         favicon=favicon,
