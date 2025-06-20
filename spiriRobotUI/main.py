@@ -33,7 +33,7 @@ async def main_ui():
 
 ui.run(title='Robot Config UI',
         favicon=favicon,
-        port=8080,
+        port=8089,
         show=True,
         uvicorn_reload_dirs=str(Path(__file__).parent.resolve()),
         reload=True,
