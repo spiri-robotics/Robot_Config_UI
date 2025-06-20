@@ -4,7 +4,7 @@ from nicegui import ui
 
 from spiriRobotUI.components.Header import header
 from spiriRobotUI.components.Sidebar import sidebar
-from spiriRobotUI.utils.PluginCard import PluginInstalledCard, PluginStoreCard
+from spiriRobotUI.components.PluginCard import PluginInstalledCard, PluginStoreCard
 from spiriRobotUI.utils.plugins import Plugin
 
 favicon = """
