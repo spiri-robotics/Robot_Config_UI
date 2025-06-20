@@ -1,3 +1,4 @@
+import asyncio
 from pathlib import Path
 
 
@@ -53,18 +54,18 @@ class InstalledPlugin(Plugin):
         print()
 
     def get_base_stats(self):
-        cores = 16.0     # fetch cores here
-        memory = 128.0     # fetch total memory here
-        disk = 128.0       # fetch total disk space here
-        self.base_stats['cores'] = cores
-        self.base_stats['memory'] = memory
-        self.base_stats['disk'] = disk
+        cores = 16.0  # fetch cores here
+        memory = 128.0  # fetch total memory here
+        disk = 128.0  # fetch total disk space here
+        self.base_stats["cores"] = cores
+        self.base_stats["memory"] = memory
+        self.base_stats["disk"] = disk
 
     def get_current_stats(self):
         status = "fetch status here"
-        cpu = 1.0        # fetch used cpu here
-        memory = 1.0     # fetch used memory here
-        disk = 1.0       # fetch used disk space here
+        cpu = 1.0  # fetch used cpu here
+        memory = 1.0  # fetch used memory here
+        disk = 1.0  # fetch used disk space here
         self.current_stats["status"] = status
         self.current_stats["cpu"] = cpu
         self.current_stats["memory"] = memory
