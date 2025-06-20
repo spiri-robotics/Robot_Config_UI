@@ -1,6 +1,8 @@
 from nicegui import ui
 from pathlib import Path
 from spiriRobotUI.pages.PluginsPage import main_ui as plugins_page
+from spiriRobotUI.pages.NetworkSettingsPage import network_ui as network_settings_page
+from spiriRobotUI.pages.SystemMonitorPage import system_ui as system_monitor_page
 
 favicon = "spiriRobotUI/icons/spiri_drone_ui_logo.svg"
 
