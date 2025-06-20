@@ -35,7 +35,7 @@ async def main_ui():
             "plugin 1",
             "spiriRobotUI/icons/cat_icon.jpg",
             "https://github.com/SidneyCW/mtg-win-tracking.git",
-            "1",
+            ["1", "2"],
         )
     )
     header()

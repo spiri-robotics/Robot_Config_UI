@@ -5,11 +5,11 @@ from pathlib import Path
 class Plugin:
     """Base class for all add-ons. This class should not be initialized directly; use subclasses."""
 
-    def __init__(self, name: str, logo: str | Path, repo: str, version: str):
+    def __init__(self, name: str, logo: str | Path, repo: str, versions: list[str]):
         self.name = name
         self.logo = logo
         self.repo = repo
-        self.version = version
+        self.versions = versions
         self.is_installed = False
 
     def install(self):
