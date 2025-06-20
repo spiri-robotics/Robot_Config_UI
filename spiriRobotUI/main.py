@@ -23,7 +23,7 @@ def add_new_plugin_card(plugin):
 async def main_ui():
         sidebar()
         header()
-        ui.markdown("## Plugin Coordinator")
+        ui.markdown("## Plug-in Coordinator")
         ui.label("Your favourite plugins, now all in one place.")
 
         ui.separator()

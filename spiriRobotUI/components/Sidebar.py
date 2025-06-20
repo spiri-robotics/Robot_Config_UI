@@ -7,6 +7,7 @@ def sidebar() -> None:
             with ui.row().classes('items-center justify-between'):
                 ui.icon('diamond')
                 ui.label('Spiri Robot UI').classes('text-2xl font-bold')
-            ui.button('Plugins', icon='home').classes('w-full text-left justify-start rounded-none')
-            ui.button('Netowork Settings', icon='settings').classes('w-full text-left justify-start rounded-none')
+            ui.button('Plug-ins', icon='home').classes('w-full text-left justify-start rounded-none')
+            ui.button('Network Settings', icon='settings').classes('w-full text-left justify-start rounded-none')
+            ui.button('System Monitor', icon='settings').classes('w-full text-left justify-start rounded-none')
         
