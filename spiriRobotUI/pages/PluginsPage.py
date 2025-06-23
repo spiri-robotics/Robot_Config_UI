@@ -1,4 +1,5 @@
 from nicegui import ui
+from spiriRobotUI.ui.styles import styles
 from spiriRobotUI.components.Sidebar import sidebar
 from spiriRobotUI.components.Header import header
 from spiriRobotUI.utils.plugin_utils import plugins, installed_plugins, load_plugins
@@ -7,6 +8,7 @@ from spiriRobotUI.classes.ToggleButton import ToggleButton
                 
 @ui.page("/")
 async def main_ui():
+    styles()
     sidebar()
     header()
     ui.markdown("## Plug-in Coordinator")
