@@ -1,11 +1,7 @@
-import asyncio
-
 from nicegui import ui
-
-from spiriRobotUI.components.PluginDetails import PluginDialog
+from spiriRobotUI.components.PluginDialog import PluginDialog
 from spiriRobotUI.components.ToggleButton import ToggleButton
-from spiriRobotUI.utils.plugins import InstalledPlugin, Plugin
-
+from spiriRobotUI.utils.Plugin import InstalledPlugin, Plugin
 
 class PluginStoreCard:
     def __init__(self, plugin: Plugin):
@@ -18,9 +14,7 @@ class PluginStoreCard:
     def render(self):
         store_card = ui.card().classes(f"{self.base_card_classes}")
         with store_card:
-            card_image = ui.image(self.plugin.logo).classes(
-                "w-full h-32 object-cover cursor-pointer"
-            )
+            card_image = ui.image(self.plugin.logo).classes("w-full h-32 object-cover cursor-pointer")
             ui.label(self.plugin.name).classes("text-lg font-bold")
             with ui.row().classes("items-center justify-between w-full"):
                 ui.label(f"Version: {self.plugin.versions[0]}")
@@ -37,7 +31,6 @@ class PluginStoreCard:
             self.plugin_dialog.dialog.open()
 
         card_image.on("click", open_dialog)
-
 
 class PluginInstalledCard:
     def __init__(self, plugin: InstalledPlugin):
@@ -58,7 +51,7 @@ class PluginInstalledCard:
                 with ui.column():
                     ui.label(self.plugin.name)
                     ui.label(self.plugin.versions[0])
-            ui.label(self.plugin.repo)
+                    ui.label(self.plugin.url)
             with ui.grid(columns=2).classes("text-xl font-bold"):
                 ui.label("Status")
                 ui.markdown().bind_content_from(
