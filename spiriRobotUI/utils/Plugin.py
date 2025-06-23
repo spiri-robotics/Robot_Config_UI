@@ -32,37 +32,55 @@ class Plugin:
         else:
             print(f"Error: {self.name} already installed")  # This method should be overridden in subclasses
 
+    def uninstall(self):
+        if self.is_installed:
+            try:
+                shutil.rmtree(SERVICES / self.folder_name)
+            except OSError as e:
+                print(f"Error removing folder: {e}")
+            except Exception as e:
+                print(f"Unexpected error: {e}")
+            self.is_installed = False
+            print(f"{self.name} uninstalled")
+        else:
+            print(f"Error: {self.name} not installed")
 
 class InstalledPlugin(Plugin):
 
     def __init__(self, name, logo, repo, folder_name):
         super().__init__(name, logo, repo, folder_name)
         self.is_installed = True
-        self.is_enabled = False
+        self.is_running = False
         self.base_stats = {}
         self.current_stats = {}
 
     def run(self):
-        if self.is_enabled:
+        if not self.is_running:
             try:
-                subprocess.run(['docker', 'compose', '-f', 'docker-compose.yaml', 'up', '-d'],
-                            check=True, cwd=Path(self.path))
+                subprocess.run(['docker', 'compose', 'up'],
+                            check=True, cwd=Path(SERVICES / self.folder_name))
             except subprocess.CalledProcessError as e:
                 print(f"Failed: {e}")
+            self.is_running = True
             print(f"{self.name} is running")
         else:
-            print(f"Error: {self.name} is not enabled")
+            print(f"Error: {self.name} is already running")
 
     def stop(self):
-        if self.is_enabled:
-            self.is_enabled = False
+        if self.is_running:
+            try:
+                subprocess.run(['docker', 'compose', 'down'],
+                            check=True, cwd=Path(SERVICES / self.folder_name))
+            except subprocess.CalledProcessError as e:
+                print(f"Failed: {e}")
+            self.is_running = False
             print(f"{self.name} stopped")
         else:
-            print(f"Error: {self.name} is not enabled")
+            print(f"Error: {self.name} is not running")
     
     def uninstall(self):
-        if self.is_enabled:
-            print(f"Error: {self.name} is enabled. Please disable it before uninstalling.")
+        if self.is_running:
+            print(f"Error: {self.name} is running. Please stop it before uninstalling.")
         else:
             super().uninstall()
             print(f"{self.name} uninstalled successfully")
