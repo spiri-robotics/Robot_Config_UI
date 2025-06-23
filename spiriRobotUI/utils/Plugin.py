@@ -2,6 +2,8 @@ from pathlib import Path
 import subprocess
 import shutil
 import os
+import docker
+import git
 
 SERVICES = Path("/services/")
 
@@ -83,23 +85,49 @@ class InstalledPlugin(Plugin):
             print(f"Error: {self.name} is running. Please stop it before uninstalling.")
         else:
             super().uninstall()
-            print(f"{self.name} uninstalled successfully")
+            self.delete_plugin()
 
     def download_logs(self):
         if self.is_enabled:
             print(f"Downloading logs for {self.name}")
-            # Implement log download logic here
-        else:
-            print(f"Error: {self.name} is not enabled. Cannot download logs.")
-    
-    def update(self, new_version: str):
-        if self.is_installed:
-            if new_version != self.version:
-                print(f"Updating {self.name} from version {self.version} to {new_version}")
-                self.version = new_version
-                # Implement update logic here
+            try:
+                client = docker.from_env()
+                container = client.containers.get(self.folder_name)
+                logs = container.logs().decode('utf-8')
+
+                with open(f"{self.folder_name}_logs.txt", 'w') as f:
+                    f.write(logs)
+                print(f"Logs for container '{self.folder_name}' saved to '{self.folder_name}_logs.txt'")
+
+            except docker.errors.NotFound:
+                print(f"Error: Container '{self.folder_name}' not found.")
+            except docker.errors.APIError as e:
+                print(f"Error interacting with Docker API: {e}")
+            except Exception as e:
+                print(f"An unexpected error occurred: {e}")
             else:
-                print(f"{self.name} is already at the latest version: {self.version}")
+                print(f"Error: {self.name} is not enabled. Cannot download logs.")
+    
+    def update(self):
+        if self.is_installed:
+            repo_path = "/path/to/your/local/repo"
+
+            try:
+                # Load the repository object
+                repo = git.Repo(repo_path)
+
+                # Get the 'origin' remote (or specify a different remote if needed)
+                origin = repo.remote(name='origin')
+
+                # Perform the pull operation
+                pull_info = origin.pull()
+
+                print(f"Successfully pulled changes from origin. Details: {pull_info}")
+
+            except git.InvalidGitRepositoryError:
+                print(f"Error: '{repo_path}' is not a valid Git repository.")
+            except Exception as e:
+                print(f"An error occurred during git pull: {e}")
         else:
             print(f"Error: {self.name} is not installed. Cannot update.")
 
@@ -127,3 +155,6 @@ class InstalledPlugin(Plugin):
         self.current_stats["cpu"] = cpu
         self.current_stats["memory"] = memory
         self.current_stats["disk"] = disk
+
+        def delete_plugin(self):
+            print(f"Deleting {self.name} plugin")
