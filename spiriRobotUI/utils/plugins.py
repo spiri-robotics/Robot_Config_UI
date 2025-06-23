@@ -1,16 +1,16 @@
+import asyncio
 from pathlib import Path
 
 
 class Plugin:
     """Base class for all add-ons. This class should not be initialized directly; use subclasses."""
 
-    def __init__(self, name: str, logo: str | Path, repo: str, version: str):
+    def __init__(self, name: str, logo: str | Path, repo: str, versions: list[str]):
         self.name = name
         self.logo = logo
         self.repo = repo
-        self.version = version
+        self.versions = versions
         self.is_installed = False
-        self.stats = {}
 
     def install(self):
         if not self.is_installed:
@@ -32,6 +32,8 @@ class InstalledPlugin(Plugin):
     def __init__(self, name, logo, repo, version):
         super().__init__(name, logo, repo, version)
         self.is_enabled = False
+        self.base_stats = {}
+        self.current_stats = {}
 
     def enable(self):
         if not self.is_enabled:
@@ -51,34 +53,42 @@ class InstalledPlugin(Plugin):
     def save_edits(self, edits: dict):
         print()
 
-    def get_stats(self):
-        status = "calculate status here"
-        cpu = "calculate cpu here"
-        memory = "calculate memory here"
-        disk = "calulate disk here"
-        self.stats["status"] = status
-        self.stats["cpu"] = cpu
-        self.stats["memory"] = memory
-        self.stats["disk"] = disk
+    def get_base_stats(self):
+        cores = 16.0  # fetch cores here
+        memory = 128.0  # fetch total memory here
+        disk = 128.0  # fetch total disk space here
+        self.base_stats["cores"] = cores
+        self.base_stats["memory"] = memory
+        self.base_stats["disk"] = disk
 
-    def get_status(self):
-        print("fetching and returning status")
+    def get_current_stats(self):
+        status = "fetch status here"
+        cpu = 1.0  # fetch used cpu here
+        memory = 1.0  # fetch used memory here
+        disk = 1.0  # fetch used disk space here
+        self.current_stats["status"] = status
+        self.current_stats["cpu"] = cpu
+        self.current_stats["memory"] = memory
+        self.current_stats["disk"] = disk
 
-    def get_cpu(self):
-        cores = "command to fetch number of cpu cores"
-        used = "command to fetch amount used, type float"
-        total = "command to fetch total amount, type float"
-        notes = "calulations will likely happen to convert into optimal size unit"
-        print("Calculating and returning CPU usage (cores/used/total)")
+    # def get_status(self):
+    #     print("fetching and returning status")
 
-    def get_memory(self):
-        used = "command to fetch amount used, type float"
-        total = "command to fetch total amount, type float"
-        notes = "calulations will likely happen to convert into optimal size unit"
-        print("Calculating and returning memory usage (used/total)")
+    # def get_cpu(self):
+    #     cores = "command to fetch number of cpu cores"
+    #     used = "command to fetch amount used, type float"
+    #     total = "command to fetch total amount, type float"
+    #     notes = "calulations will likely happen to convert into optimal size unit"
+    #     print("Calculating and returning CPU usage (cores/used/total)")
 
-    def get_disk(self):
-        used = "command to fetch amount used, type float"
-        total = "command to fetch total amount, type float"
-        notes = "calulations will likely happen to convert into optimal size unit"
-        print("Calculating and returning disk usage (used/total)")
+    # def get_memory(self):
+    #     used = "command to fetch amount used, type float"
+    #     total = "command to fetch total amount, type float"
+    #     notes = "calulations will likely happen to convert into optimal size unit"
+    #     print("Calculating and returning memory usage (used/total)")
+
+    # def get_disk(self):
+    #     used = "command to fetch amount used, type float"
+    #     total = "command to fetch total amount, type float"
+    #     notes = "calulations will likely happen to convert into optimal size unit"
+    #     print("Calculating and returning disk usage (used/total)")
