@@ -12,27 +12,31 @@ class PluginStoreCard:
         self.base_card_classes = "w-56 h-64 flex-col justify-between"
         self.plugin_dialog = PluginDialog(plugin)
         self.plugin = plugin
+        self.install_toggle = None
 
+    @ui.refreshable
     def render(self):
-        store_card = ui.card().classes(f"{self.base_card_classes} cursor-pointer")
+        store_card = ui.card().classes(f"{self.base_card_classes}")
         with store_card:
-            ui.image(self.plugin.logo).classes("w-full h-32 object-cover")
+            card_image = ui.image(self.plugin.logo).classes(
+                "w-full h-32 object-cover cursor-pointer"
+            )
             ui.label(self.plugin.name).classes("text-lg font-bold")
             with ui.row().classes("items-center justify-between w-full"):
                 ui.label(f"Version: {self.plugin.versions[0]}")
-                install_toggle = ToggleButton(
+                self.install_toggle = ToggleButton(
                     on_label="Uninstall",
                     off_label="Install",
                     on_switch=lambda: self.plugin.uninstall(),
                     off_switch=lambda: self.plugin.install(),
+                    state=self.plugin.is_installed,
                 )
-            install_toggle.state = self.plugin.is_installed
 
         def open_dialog():
             self.plugin_dialog.generate_dialog()
             self.plugin_dialog.dialog.open()
 
-        store_card.on("click", open_dialog)
+        card_image.on("click", open_dialog)
 
 
 class PluginInstalledCard:
