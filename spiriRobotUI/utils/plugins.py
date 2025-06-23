@@ -36,8 +36,8 @@ class Plugin:
 
 
 class InstalledPlugin(Plugin):
-    def __init__(self, name, logo, repo, version):
-        super().__init__(name, logo, repo, version)
+    def __init__(self, name, logo, repo, version, folder_name):
+        super().__init__(name, logo, repo, version, folder_name)
         self.is_installed = True
         self.is_enabled = False
         self.stats = {
@@ -46,7 +46,6 @@ class InstalledPlugin(Plugin):
             "memory": "unknown",
             "disk": "unknown"
         }
-        self.path = Path(f"/opt/spiriRobotUI/plugins/{self.name}")
         self.description = "No description provided"
 
     def run(self):
