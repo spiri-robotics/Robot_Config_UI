@@ -4,6 +4,7 @@ import os, yaml
 from spiriRobotUI.classes.Plugin import Plugin, InstalledPlugin
 
 plugins = {}
+installed_plugins = {}
 
 def load_plugins():
     ROOT_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..'))

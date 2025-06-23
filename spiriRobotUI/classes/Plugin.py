@@ -1,6 +1,4 @@
-import asyncio
 from pathlib import Path
-
 
 class Plugin:
     """Base class for all plugins"""
