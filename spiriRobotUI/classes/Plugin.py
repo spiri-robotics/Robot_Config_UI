@@ -3,13 +3,21 @@ from pathlib import Path
 
 
 class Plugin:
-    """Base class for all add-ons. This class should not be initialized directly; use subclasses."""
+    """Base class for all plugins"""
 
-    def __init__(self, name: str, logo: str | Path, repo: str, version: str):
+    def __init__(
+            self, 
+            name: str, 
+            logo: str | Path, 
+            url: str, 
+            version: str
+        ):
+
         self.name = name
         self.logo = logo
-        self.repo = repo
+        self.url = url
         self.version = version
+
         self.is_installed = False
 
     def install(self):
@@ -70,25 +78,3 @@ class InstalledPlugin(Plugin):
         self.current_stats["cpu"] = cpu
         self.current_stats["memory"] = memory
         self.current_stats["disk"] = disk
-
-    # def get_status(self):
-    #     print("fetching and returning status")
-
-    # def get_cpu(self):
-    #     cores = "command to fetch number of cpu cores"
-    #     used = "command to fetch amount used, type float"
-    #     total = "command to fetch total amount, type float"
-    #     notes = "calulations will likely happen to convert into optimal size unit"
-    #     print("Calculating and returning CPU usage (cores/used/total)")
-
-    # def get_memory(self):
-    #     used = "command to fetch amount used, type float"
-    #     total = "command to fetch total amount, type float"
-    #     notes = "calulations will likely happen to convert into optimal size unit"
-    #     print("Calculating and returning memory usage (used/total)")
-
-    # def get_disk(self):
-    #     used = "command to fetch amount used, type float"
-    #     total = "command to fetch total amount, type float"
-    #     notes = "calulations will likely happen to convert into optimal size unit"
-    #     print("Calculating and returning disk usage (used/total)")

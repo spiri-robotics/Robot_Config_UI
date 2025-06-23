@@ -1,6 +1,6 @@
 from nicegui import ui
 
-async def styles():
+def styles():
 
     ui.colors(primary='#9EDFEC', 
           secondary='#274c77',

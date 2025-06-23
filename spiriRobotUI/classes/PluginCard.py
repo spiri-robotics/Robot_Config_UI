@@ -2,8 +2,8 @@ import asyncio
 
 from nicegui import ui
 
-from spiriRobotUI.ui.ToggleButton import ToggleButton
-from spiriRobotUI.utils.plugins import InstalledPlugin, Plugin
+from spiriRobotUI.classes.ToggleButton import ToggleButton
+from spiriRobotUI.classes.Plugin import InstalledPlugin, Plugin
 
 
 class PluginStoreCard:
@@ -11,7 +11,7 @@ class PluginStoreCard:
         self.base_card_classes = "w-56 h-64 flex-col justify-between"
         self.plugin = plugin
 
-    def render(self):
+    async def render(self):
         with ui.card().classes(f"{self.base_card_classes}"):
             ui.image(self.plugin.logo).classes("w-full h-32 object-cover")
             ui.label(self.plugin.name).classes("text-lg font-bold")
@@ -24,7 +24,6 @@ class PluginStoreCard:
                     off_switch=lambda: self.plugin.install(),
                 )
             install_toggle.state = self.plugin.is_installed
-
 
 class PluginInstalledCard:
     def __init__(self, plugin: InstalledPlugin):
@@ -45,7 +44,7 @@ class PluginInstalledCard:
                 with ui.column():
                     ui.label(self.plugin.name)
                     ui.label(self.plugin.version)
-            ui.label(self.plugin.repo)
+            ui.label(self.plugin.url)
             with ui.grid(columns=2).classes("text-xl font-bold"):
                 ui.label("Status")
                 ui.markdown().bind_content_from(
