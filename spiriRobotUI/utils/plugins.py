@@ -1,30 +1,38 @@
 from pathlib import Path
 import subprocess
+import shutil
+import os
+
+SERVICES = Path("/services/")
 
 class Plugin:
     """Base class for all add-ons. This class should not be initialized directly; use subclasses."""
 
-    def __init__(self, name: str, logo: str | Path, repo: str, version: str):
+    def __init__(self, name: str, logo: str | Path, repo: str, version: str, folder_name: str):
         self.name = name
         self.logo = logo
         self.repo = repo
+        self.folder_name = folder_name
         self.version = version
         self.is_installed = False
         self.stats = {}
 
     def install(self):
         if not self.is_installed:
+            try:
+                if os.path.exists(SERVICES/self.folder_name):
+                    print(f"Error: {self.name} already installed.")
+                    return
+
+                shutil.copytree(f"/robot-config-ui/repos/{self.repo}/services/{self.folder_name}", SERVICES/self.folder_name)
+            except shutil.Error as e:
+                print(f"Error copying folder: {e}")
+            except OSError as e:
+                print(f"OS Error: {e}")
             self.is_installed = True
             print(f"{self.name} installed")
         else:
-            print(f"Error: {self.name} already installed")
-
-    def uninstall(self):
-        if self.is_installed:
-            self.is_installed = False
-            print(f"{self.name} uninstalled")
-        else:
-            print(f"Error: {self.name} not installed")
+            print(f"Error: {self.name} already installed")  # This method should be overridden in subclasses
 
 
 class InstalledPlugin(Plugin):
@@ -105,9 +113,6 @@ class InstalledPlugin(Plugin):
             print(f"{self.name} disabled")
         else:
             print(f"Error: {self.name} not enabled")
-
-    def save_edits(self, edits: dict):
-        print()
 
     def get_stats(self):
         status = "calculate status here"
