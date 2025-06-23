@@ -1,11 +1,10 @@
 from nicegui import ui
-from spiriRobotUI.ui.styles import styles
+from spiriRobotUI.utils.styles import styles
 from spiriRobotUI.components.Sidebar import sidebar
 from spiriRobotUI.components.Header import header
+from spiriRobotUI.components.PluginCard import PluginStoreCard, PluginInstalledCard
 from spiriRobotUI.utils.plugin_utils import plugins, installed_plugins, load_plugins
-from spiriRobotUI.classes.PluginCard import PluginStoreCard, PluginInstalledCard
-from spiriRobotUI.classes.ToggleButton import ToggleButton
-                
+
 @ui.page("/")
 async def main_ui():
     styles()
@@ -24,13 +23,13 @@ async def main_ui():
     with ui.tab_panels(tabs, value=one).classes('w-full'):
         with ui.tab_panel(one):
             with ui.grid().classes("grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4"):
-                for name, plug in plugins.items():
+                for plug in plugins.values():
                     p = PluginStoreCard(plug)
-                    await p.render()
+                    p.render()
         with ui.tab_panel(two):
             if len(installed_plugins) > 0:
                 with ui.grid().classes("grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4"):
-                    for name, plug in installed_plugins.items():
+                    for plug in installed_plugins.values():
                         p = PluginInstalledCard(plug)
                         await p.render()
             else:

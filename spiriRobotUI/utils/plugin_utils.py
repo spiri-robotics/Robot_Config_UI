@@ -1,7 +1,7 @@
 from nicegui import ui
 from pathlib import Path
 import os, yaml
-from spiriRobotUI.classes.Plugin import Plugin, InstalledPlugin
+from spiriRobotUI.utils.Plugin import Plugin, InstalledPlugin
 
 plugins = {}
 installed_plugins = {}
@@ -19,8 +19,8 @@ def load_plugins():
     for name, details in file.get('spiri-plugins').items():
         logo = details.get('logo')
         url = details.get('url')
-        version = details.get('version')
+        versions = details.get('versions')
 
-        plug = Plugin(name, logo, url, version)
+        plug = Plugin(name, logo, url, versions)
         plugins[name] = plug
 

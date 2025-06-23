@@ -8,13 +8,13 @@ class Plugin:
             name: str, 
             logo: str | Path, 
             url: str, 
-            version: str
+            versions: list
         ):
 
         self.name = name
         self.logo = logo
         self.url = url
-        self.version = version
+        self.versions = versions
 
         self.is_installed = False
 
