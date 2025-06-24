@@ -11,6 +11,7 @@ class Plugin:
         self.repo = repo
         self.versions = versions
         self.is_installed = False
+        self.readme_contents = self.get_readme_contents()
 
     def install(self):
         if not self.is_installed:
@@ -25,6 +26,12 @@ class Plugin:
             print(f"{self.name} uninstalled")
         else:
             print(f"Error: {self.name} not installed")
+
+    def get_readme_contents(self):
+        path = f"repos/{self.repo}/services/{self.name}/README.md"
+        with open(path, "r") as f:
+            readme_contents = f.read()
+        return readme_contents
 
 
 class InstalledPlugin(Plugin):

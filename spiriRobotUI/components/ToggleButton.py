@@ -10,11 +10,15 @@ class ToggleButton(ui.button):
         on_switch=None,
         off_switch=None,
         state,
+        on_color="positive",
+        off_color="warning",
         **kwargs,
     ):
         super().__init__(*args, **kwargs)
         self.state = state
-        self.color = "positive"
+        self.on_color = on_color
+        self.off_color = off_color
+        self.color = self.off_color
         self.on_label = on_label
         self.off_label = off_label
         self.on_switch = on_switch
@@ -30,7 +34,7 @@ class ToggleButton(ui.button):
         self.update()
 
     def update(self) -> None:
-        self.color = "positive" if self.state else "warning"
+        self.color = self.on_color if self.state else self.off_color
         label = self.on_label if self.state else self.off_label
         self.props(f"color={self.color}")
         self.set_text(label)
