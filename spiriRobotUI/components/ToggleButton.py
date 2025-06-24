@@ -1,6 +1,5 @@
 from nicegui import ui
 
-
 class ToggleButton(ui.button):
     def __init__(
         self,
@@ -14,6 +13,7 @@ class ToggleButton(ui.button):
         off_color="warning",
         **kwargs,
     ):
+        
         super().__init__(*args, **kwargs)
         self.state = state
         self.on_color = on_color

@@ -1,8 +1,5 @@
-import asyncio
-
 from nicegui import ui
-
-from spiriRobotUI.components.PluginDetails import PluginDialog
+from spiriRobotUI.components.PluginDialog import PluginDialog
 from spiriRobotUI.components.ToggleButton import ToggleButton
 from spiriRobotUI.utils.plugins import InstalledPlugin, Plugin
 
@@ -42,7 +39,6 @@ class PluginBrowserCard:
             self.plugin_dialog.dialog.open()
 
         card_image.on("click", open_dialog)
-
 
 class PluginInstalledCard:
     def __init__(self, plugin: InstalledPlugin):

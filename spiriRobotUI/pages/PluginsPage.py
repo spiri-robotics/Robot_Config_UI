@@ -43,14 +43,17 @@ async def main_ui():
 
     ui.separator()
 
-    with ui.tabs().classes("w-full") as tabs:
-        one = ui.tab("Available")
-        two = ui.tab("Installed")
-    with ui.tab_panels(tabs, value=one).classes("w-full"):
+    load_plugins()
+
+    with ui.tabs().classes('w-full') as tabs:
+        one = ui.tab('Available')
+        two = ui.tab('Installed')
+    with ui.tab_panels(tabs, value=one).classes('w-full'):
         with ui.tab_panel(one):
             with ui.grid().classes("grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4"):
-                for plugin_name in plugins:
-                    add_new_plugin_card(plugins[plugin_name])
+                for plug in plugins.values():
+                    p = PluginStoreCard(plug)
+                    p.render()
         with ui.tab_panel(two):
             if len(installed_plugins) == 0:
                 ui.label(
