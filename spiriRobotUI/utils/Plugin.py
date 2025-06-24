@@ -8,13 +8,14 @@ class Plugin:
             self, 
             name: str, 
             logo: str | Path, 
+            url: str,
             repo: str, 
             versions: list
         ):
 
         self.name = name
         self.logo = logo
-        self.url = ""
+        self.url = url
         self.repo = repo
         self.versions = versions
 

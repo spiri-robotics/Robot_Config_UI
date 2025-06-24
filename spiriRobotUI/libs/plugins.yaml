@@ -3,9 +3,11 @@ spiri-plugins:
   sample-plugin:
     logo: spiriRobotUI/icons/cat_icon.jpg
     url: https://github.com/SidneyCW/mtg-win-tracking.git
+    repo: madeup
     versions: [1, 2, 3]
 
   another-plugin: 
     logo: spiriRobotUI/icons/cat_icon.jpg
     url: https://github.com/SidneyCW/mtg-win-tracking.git
+    repo: madeup
     versions: [4, 5, 6]
