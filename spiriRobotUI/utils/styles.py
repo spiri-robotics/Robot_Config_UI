@@ -1,5 +1,6 @@
 from nicegui import ui
 
+DARK_MODE = False
 
 async def styles():
 

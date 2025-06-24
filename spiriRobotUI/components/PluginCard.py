@@ -1,7 +1,9 @@
 from nicegui import ui
+
 from spiriRobotUI.components.PluginDialog import PluginDialog
 from spiriRobotUI.components.ToggleButton import ToggleButton
-from spiriRobotUI.utils.plugins import InstalledPlugin, Plugin
+from spiriRobotUI.utils.Plugin import InstalledPlugin, Plugin
+from spiriRobotUI.utils.styles import DARK_MODE
 
 
 class PluginBrowserCard:
@@ -16,8 +18,9 @@ class PluginBrowserCard:
         browser_card = ui.card().classes(
             f"transition transform hover:scale-105 hover:border-blue-500 {self.base_card_classes}"
         )
-        if ui.dark_mode:
+        if DARK_MODE:
             browser_card.classes(f"dark-card")
+            
         with browser_card:
             card_image = ui.image(self.plugin.logo).classes(
                 "w-full h-48 object-cover cursor-pointer"
@@ -49,7 +52,7 @@ class PluginInstalledCard:
         self.plugin.get_current_stats()
         self.plugin.get_base_stats()
         installed_card = ui.card().classes(f"{self.base_card_classes}")
-        if ui.dark_mode:
+        if DARK_MODE:
             installed_card.classes(f"dark-card")
         with installed_card:
             with ui.row().classes("justify-between w-full"):

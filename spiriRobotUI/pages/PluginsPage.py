@@ -1,10 +1,11 @@
 from nicegui import ui
 
 from spiriRobotUI.components.Header import header
-from spiriRobotUI.components.PluginCard import PluginInstalledCard, PluginBrowserCard
+from spiriRobotUI.components.PluginCard import PluginBrowserCard, PluginInstalledCard
 from spiriRobotUI.components.Sidebar import sidebar
 from spiriRobotUI.components.ToggleButton import ToggleButton
-from spiriRobotUI.utils.plugins import InstalledPlugin, Plugin
+from spiriRobotUI.utils.Plugin import InstalledPlugin, Plugin
+from spiriRobotUI.utils.plugin_utils import load_plugins
 from spiriRobotUI.utils.styles import styles
 
 plugins = {
@@ -52,7 +53,7 @@ async def main_ui():
         with ui.tab_panel(one):
             with ui.grid().classes("grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4"):
                 for plug in plugins.values():
-                    p = PluginStoreCard(plug)
+                    p = PluginBrowserCard(plug)
                     p.render()
         with ui.tab_panel(two):
             if len(installed_plugins) == 0:

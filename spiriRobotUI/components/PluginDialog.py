@@ -4,6 +4,7 @@ from nicegui import ui
 
 from spiriRobotUI.components.ToggleButton import ToggleButton
 from spiriRobotUI.utils.Plugin import Plugin
+from spiriRobotUI.utils.styles import DARK_MODE
 
 
 class PluginDialog:
@@ -33,10 +34,9 @@ class PluginDialog:
                                 on_color="secondary",
                                 off_color="warning",
                             )
-
                 with ui.column().classes("w-full"):
                     ui.markdown(self.plugin.readme_contents)
 
-        if ui.dark_mode:
+        if DARK_MODE:
             name_card.classes("dark-card")
             outer_card.classes("dark-card")
