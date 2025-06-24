@@ -1,5 +1,6 @@
 from pathlib import Path
 
+
 class Plugin:
     """Base class for all plugins"""
 
@@ -7,16 +8,18 @@ class Plugin:
             self, 
             name: str, 
             logo: str | Path, 
-            url: str, 
+            repo: str, 
             versions: list
         ):
 
         self.name = name
         self.logo = logo
-        self.url = url
+        self.url = ""
+        self.repo = repo
         self.versions = versions
 
         self.is_installed = False
+        self.readme_contents = self.get_readme_contents()
 
     def install(self):
         if not self.is_installed:
@@ -31,6 +34,15 @@ class Plugin:
             print(f"{self.name} uninstalled")
         else:
             print(f"Error: {self.name} not installed")
+
+    def get_readme_contents(self):
+        path = f"repos/{self.repo}/services/{self.name}/README.md"
+        if Path(path).exists():
+            with open(path, "r") as f:
+                readme_contents = f.read()
+            return readme_contents
+        else:
+            return ""
 
 
 class InstalledPlugin(Plugin):
