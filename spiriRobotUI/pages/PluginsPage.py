@@ -62,5 +62,9 @@ async def main_ui():
                 )
             else:
                 with ui.grid().classes("grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4"):
+                    for plug in installed_plugins.values():
+                        p = PluginInstalledCard(plug)
+                        p.render()
+
                     for plugin_name in plugins:
                         add_installed_card(installed_plugins[plugin_name])

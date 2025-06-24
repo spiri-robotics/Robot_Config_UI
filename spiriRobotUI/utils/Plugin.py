@@ -26,7 +26,7 @@ class Plugin:
             self.is_installed = True
             print(f"{self.name} installed")
         else:
-            print(f"Error: {self.name} already installed")
+            raise NotImplementedError
 
     def uninstall(self):
         if self.is_installed:
@@ -49,6 +49,7 @@ class InstalledPlugin(Plugin):
 
     def __init__(self, name, logo, repo, version):
         super().__init__(name, logo, repo, version)
+        self.is_installed = True
         self.is_enabled = False
         self.base_stats = {}
         self.current_stats = {}

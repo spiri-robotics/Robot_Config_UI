@@ -24,3 +24,5 @@ def load_plugins():
         plug = Plugin(name, logo, url, versions)
         plugins[name] = plug
 
+def load_installed():
+    pass
