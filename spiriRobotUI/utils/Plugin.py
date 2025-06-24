@@ -87,6 +87,23 @@ class InstalledPlugin(Plugin):
             super().uninstall()
             self.delete_plugin()
 
+    def get_logs(self):
+        if self.is_running:
+            print(f"Fetching logs for {self.name}")
+            try:
+                client = docker.from_env()
+                container = client.containers.get(self.folder_name)
+                logs = container.logs().decode('utf-8')
+                print(logs)
+            except docker.errors.NotFound:
+                print(f"Error: Container '{self.folder_name}' not found.")
+            except docker.errors.APIError as e:
+                print(f"Error interacting with Docker API: {e}")
+            except Exception as e:
+                print(f"An unexpected error occurred: {e}")
+        else:
+            print(f"Error: {self.name} is not running. Cannot fetch logs.")
+
     def download_logs(self):
         if self.is_enabled:
             print(f"Downloading logs for {self.name}")
@@ -131,6 +148,15 @@ class InstalledPlugin(Plugin):
         else:
             print(f"Error: {self.name} is not installed. Cannot update.")
 
+    def display_compose_file(self):
+        compose_file_path = Path(SERVICES / self.folder_name / 'docker-compose.yml')
+        if compose_file_path.exists():
+            with open(compose_file_path, 'r') as file:
+                content = file.read()
+                print(f"Contents of {compose_file_path}:\n{content}")
+        else:
+            print(f"Error: Docker Compose file not found at {compose_file_path}")
+            
     def configure(self, config: dict):
         if self.is_enabled:
             print(f"Configuring {self.name} with provided settings")
@@ -147,14 +173,14 @@ class InstalledPlugin(Plugin):
         self.base_stats["disk"] = disk
 
     def get_current_stats(self):
-        status = "fetch status here"
-        cpu = 1.0  # fetch used cpu here
-        memory = 1.0  # fetch used memory here
-        disk = 1.0  # fetch used disk space here
+        status =  "running"
+        if not self.is_running:
+            status = "stopped"
+        cpu =  0.0 # fetch current CPU usage here
+        memory = 0.0  # fetch current memory usage here
+        disk = 0.0  # fetch current disk usage here
         self.current_stats["status"] = status
-        self.current_stats["cpu"] = cpu
-        self.current_stats["memory"] = memory
-        self.current_stats["disk"] = disk
+        self.current_stats["cpu"] = cpu 
 
         def delete_plugin(self):
             print(f"Deleting {self.name} plugin")
