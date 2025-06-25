@@ -23,4 +23,3 @@ def load_plugins():
 
         plug = Plugin(name, logo, url, folder_name)
         plugins[name] = plug
-

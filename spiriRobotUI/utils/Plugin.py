@@ -8,6 +8,8 @@ from spiriRobotUI.settings import PROJECT_ROOT
 
 SERVICES = Path("/services/")
 
+installed_plugins = {}
+
 class Plugin:
     """Base class for all plugins"""
 
@@ -21,19 +23,20 @@ class Plugin:
         self.is_running = False
         self.readme_contents = self.get_readme_contents()
 
-    def install(self, plugins, installed_plugins):
+    def install(self):
         if not self.is_installed:
             try:
                 if os.path.exists(SERVICES/self.folder_name):
                     print(f"Error: {self.name} already installed.")
+                    self.is_installed = True
                     return
-
-                shutil.copytree(Path(PROJECT_ROOT, f"/repos/{self.repo}/services/{self.folder_name}"), SERVICES/self.folder_name)
+                
+                app_path = Path("repos") / self.repo / "services" / self.folder_name
+                shutil.copytree(app_path, SERVICES/self.folder_name)
             except shutil.Error as e:
                 print(f"Error copying folder: {e}")
             except OSError as e:
                 print(f"OS Error: {e}")
-            plugins.pop(self.name)
             installed_plugins[self.name] = InstalledPlugin(
                 self.name,
                 self.logo,
@@ -45,7 +48,7 @@ class Plugin:
         else:
             print(f"Error: {self.name} already installed")  # This method should be overridden in subclasses
 
-    def uninstall(self, plugins,  installed_plugins):
+    def uninstall(self):
         if self.is_installed:
             try:
                 shutil.rmtree(SERVICES / self.folder_name)
@@ -53,12 +56,6 @@ class Plugin:
                 print(f"Error removing folder: {e}")
             except Exception as e:
                 print(f"Unexpected error: {e}")
-            plugins[self.name] = Plugin(
-                self.name,
-                self.logo,
-                self.repo,
-                self.folder_name
-            )
             installed_plugins.pop(self.name, None)
             self.is_installed = False
             print(f"{self.name} uninstalled")
@@ -82,7 +79,6 @@ plugins = {
         "webapp-example"
     )
 }
-installed_plugins = {}
 
 class InstalledPlugin(Plugin):
 

@@ -13,7 +13,6 @@ class PluginBrowserCard:
         self.plugin = plugin
         self.install_toggle = None
 
-    @ui.refreshable
     def render(self):
         browser_card = ui.card().classes(
             f"transition transform hover:scale-105 hover:border-blue-500 {self.base_card_classes}"
@@ -30,8 +29,8 @@ class PluginBrowserCard:
                 self.install_toggle = ToggleButton(
                     on_label="Install",
                     off_label="Uninstall",
-                    on_switch=lambda: self.plugin.install(plugins,  installed_plugins),
-                    off_switch=lambda: self.plugin.uninstall(plugins,  installed_plugins),
+                    on_switch=lambda: self.plugin.install(),
+                    off_switch=lambda: self.plugin.uninstall(),
                     state=not self.plugin.is_installed,
                     on_color="secondary",
                     off_color="warning",
