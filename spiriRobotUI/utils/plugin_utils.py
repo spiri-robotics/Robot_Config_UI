@@ -1,6 +1,6 @@
 from nicegui import ui
 from pathlib import Path
-import yaml, os
+import yaml, subprocess
 from spiriRobotUI.utils.Plugin import Plugin, InstalledPlugin
 from spiriRobotUI.settings import INSTALLED_PLUGIN_DIR
 
@@ -24,8 +24,6 @@ def load_plugins():
 
     plugins.clear()
 
-    print(file)
-
     for name, details in file.get('spiri-plugins').items():
         logo = details.get('logo')
         url = details.get('url')
@@ -34,6 +32,35 @@ def load_plugins():
 
         plug = Plugin(name, logo, url, repo, versions)
         plugins[name] = plug
+
+def load_installed():
+    for folder in INSTALLED_PLUGIN_DIR.iterdir():
+        if not folder.is_dir:
+            print('not a folder')
+            continue
+
+def save_new_plugin(link: str|Path):
+    name = link.split('/')[-1]
+        
+    if '.git' in name:
+        name = name[:-4]
+    else:
+        link = f'{link}.git'
+
+    for repo in REPO_DIR.iterdir():
+        if name == repo.name:
+            print('Repo already cloned')
+            ui.notify('Repository already added', type='negative')
+            return
+    
+    command = ['git', 'clone', f'{link}', f'repos/{name}']
+    subprocess.run(command)
+
+    # make plugin object(s) + add to plugin dict
+
+    # install object(s) if 'install all' is clicked else nothing
+
+    # refresh cards (after install starts but let install run in background)
 
 # def get_details(service: Path) -> dict:
 #     details = {}
@@ -46,9 +73,3 @@ def load_plugins():
 
 #     url = 
 #     return details
-
-def load_installed():
-    for folder in INSTALLED_PLUGIN_DIR.iterdir():
-        if not folder.is_dir:
-            print('not a folder')
-            continue

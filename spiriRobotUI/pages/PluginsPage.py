@@ -1,47 +1,52 @@
 from nicegui import ui
+import subprocess
 
 from spiriRobotUI.components.Header import header
 from spiriRobotUI.components.PluginCard import PluginBrowserCard, PluginInstalledCard
 from spiriRobotUI.components.Sidebar import sidebar
-from spiriRobotUI.components.ToggleButton import ToggleButton
 from spiriRobotUI.utils.Plugin import InstalledPlugin, Plugin
-from spiriRobotUI.utils.plugin_utils import load_plugins, load_installed, plugins, installed_plugins
+from spiriRobotUI.utils.plugin_utils import load_plugins, load_installed, plugins, installed_plugins, save_new_plugin
 from spiriRobotUI.utils.styles import styles
-
-# plugins = {
-#     "plugin1": Plugin(
-#         "plugin1",
-#         "spiriRobotUI/icons/cat_icon.jpg",
-#         "example1",
-#         ["1", "2"],
-#     )
-# }
-# installed_plugins = {
-#     "plugin1": InstalledPlugin(
-#         "plugin1",
-#         "spiriRobotUI/icons/cat_icon.jpg",
-#         "example1",
-#         ["1", "2"],
-#     )
-# }
-
-# def add_plugin_card(plugin: Plugin):
-#     """Add a new plugin card to the UI."""
-#     new_card = PluginBrowserCard(plugin)
-#     new_card.render()
 
 def add_installed_card(plugin: InstalledPlugin):
     new_card = PluginInstalledCard(plugin)
     new_card.render()
 
-
 @ui.page("/")
 async def main_ui():
+
     await styles()
     sidebar()
     header()
+
+    with ui.dialog() as d, ui.card().classes('p-5 justify-center w-full'):
+        ui.label('Link A Plugin').classes('text-h5')
+        link = ui.input('Repository link', placeholder='www.git.spirirobotics.com/your-repo').classes('w-full')
+        check = ui.checkbox('Install all plugins in repository')
+        with ui.row().classes('justify-center w-full'):
+            ui.button('go away', color='secondary', on_click=lambda: d.submit(None))
+            ui.button('submit', color='secondary', on_click=lambda l=link, c=check: submit(l, c))
+
+    def submit(link: ui.input, check: ui.checkbox):
+        d.submit([link.value, check.value])
+        check.clear()
+
+    async def new_plugin():
+        form = await d
+        if form is None:
+            pass
+        else:
+            link = form[0]
+            check = form[1]
+
+            if link is not None:
+                print(check)
+                save_new_plugin(link)
+
     ui.markdown("## Plug-in Coordinator")
-    ui.label("Your favourite plugins, now all in one place.")
+    with ui.row(align_items='end').classes('w-full justify-between'):
+        ui.label("Your favourite plugins, now all in one place.")
+        ui.button('Link plugin', color='secondary', on_click=new_plugin)
 
     ui.separator()
 
@@ -65,6 +70,3 @@ async def main_ui():
                     for plug in installed_plugins.values():
                         p = PluginInstalledCard(plug)
                         p.render()
-
-                    for plugin_name in plugins:
-                        add_installed_card(installed_plugins[plugin_name])
