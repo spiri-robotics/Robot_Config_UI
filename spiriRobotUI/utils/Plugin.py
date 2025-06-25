@@ -1,5 +1,10 @@
+import subprocess, shutil, os, docker.errors, git
+
 from pathlib import Path
 
+SERVICES = Path("/services/")
+
+installed_plugins = {}
 
 class Plugin:
     """Base class for all plugins"""
@@ -8,29 +13,55 @@ class Plugin:
             self, 
             name: str, 
             logo: str | Path, 
-            url: str,
+            # url: str,
             repo: str, 
-            versions: list
+            folder_name: str
         ):
 
         self.name = name
         self.logo = logo
-        self.url = url
+        self.url = ''
         self.repo = repo
-        self.versions = versions
+        self.folder_name = folder_name
 
         self.is_installed = False
         self.readme_contents = self.get_readme_contents()
 
     def install(self):
         if not self.is_installed:
+            try:
+                if os.path.exists(SERVICES/self.folder_name):
+                    print(f"Error: {self.name} already installed.")
+                    self.is_installed = True
+                    return
+                
+                app_path = Path("repos") / self.repo / "services" / self.folder_name
+                shutil.copytree(app_path, SERVICES/self.folder_name)
+            except shutil.Error as e:
+                print(f"Error copying folder: {e}")
+            except OSError as e:
+                print(f"OS Error: {e}")
+            installed_plugins[self.name] = InstalledPlugin(
+                self.name,
+                self.logo,
+                self.repo,
+                self.folder_name
+            )
             self.is_installed = True
             print(f"{self.name} installed")
         else:
-            raise NotImplementedError
+            print(f"Error: {self.name} already installed")  # This method should be overridden in subclasses
 
     def uninstall(self):
         if self.is_installed:
+            try:
+                shutil.rmtree(SERVICES / self.folder_name)
+            except OSError as e:
+                print(f"Error removing folder: {e}")
+            except Exception as e:
+                print(f"Unexpected error: {e}")
+
+            installed_plugins.pop(self.name, None)
             self.is_installed = False
             print(f"{self.name} uninstalled")
         else:
@@ -44,34 +75,127 @@ class Plugin:
             return readme_contents
         else:
             return ""
-
+        
+plugins = {
+    "plugin1": Plugin(
+        "plugin1",
+        "spiriRobotUI/icons/cat_icon.jpg",
+        "robot-config-test-repo",
+        "webapp-example",
+    )
+}
 
 class InstalledPlugin(Plugin):
 
-    def __init__(self, name, logo, repo, version):
-        super().__init__(name, logo, repo, version)
+    def __init__(self, name, logo, repo, folder_name):
+        super().__init__(name, logo, repo, folder_name)
         self.is_installed = True
-        self.is_enabled = False
-        self.base_stats = {}
-        self.current_stats = {}
+        self.is_running = False
+        self.base_stats = {"cores": 0, "memory": 0, "disk": 0}
+        self.current_stats = {"status": "stopped", "cpu": 0.0, "memory": 0.0, "disk": 0.0}
 
-    def enable(self):
-        if not self.is_enabled:
-            # call get_stats()
-            self.is_enabled = True
-            print(f"{self.name} enabled")
+    def run(self):
+        if not self.is_running:
+            try:
+                subprocess.run(['docker', 'compose', 'up'],
+                            check=True, cwd=Path(SERVICES / self.folder_name))
+            except subprocess.CalledProcessError as e:
+                print(f"Failed: {e}")
+            self.is_running = True
+            print(f"{self.name} is running")
         else:
-            print(f"Error: {self.name} already enabled")
+            print(f"Error: {self.name} is already running")
 
-    def disable(self):
-        if self.is_enabled:
-            self.is_enabled = False
-            print(f"{self.name} disabled")
+    def stop(self):
+        if self.is_running:
+            try:
+                subprocess.run(['docker', 'compose', 'down'],
+                            check=True, cwd=Path(SERVICES / self.folder_name))
+            except subprocess.CalledProcessError as e:
+                print(f"Failed: {e}")
+            self.is_running = False
+            print(f"{self.name} stopped")
         else:
-            print(f"Error: {self.name} not enabled")
+            print(f"Error: {self.name} is not running")
+    
+    def uninstall(self):
+        if self.is_running:
+            print(f"Error: {self.name} is running. Please stop it before uninstalling.")
+        else:
+            super().uninstall()
 
-    def save_edits(self, edits: dict):
-        print()
+    def get_logs(self):
+        if self.is_running:
+            print(f"Fetching logs for {self.name}")
+            try:
+                client = docker.from_env()
+                container = client.containers.get(self.folder_name)
+                logs = container.logs().decode('utf-8')
+                print(logs)
+            except docker.errors.NotFound:
+                print(f"Error: Container '{self.folder_name}' not found.")
+            except docker.errors.APIError as e:
+                print(f"Error interacting with Docker API: {e}")
+            except Exception as e:
+                print(f"An unexpected error occurred: {e}")
+        else:
+            print(f"Error: {self.name} is not running. Cannot fetch logs.")
+
+    def download_logs(self):
+        if self.is_running:
+            print(f"Downloading logs for {self.name}")
+            try:
+                client = docker.from_env()
+                container = client.containers.get(self.folder_name)
+                logs = container.logs().decode('utf-8')
+
+                with open(f"{self.folder_name}_logs.txt", 'w') as f:
+                    f.write(logs)
+                print(f"Logs for container '{self.folder_name}' saved to '{self.folder_name}_logs.txt'")
+
+            except docker.errors.NotFound:
+                print(f"Error: Container '{self.folder_name}' not found.")
+            except docker.errors.APIError as e:
+                print(f"Error interacting with Docker API: {e}")
+            except Exception as e:
+                print(f"An unexpected error occurred: {e}")
+            else:
+                print(f"Error: {self.name} is not enabled. Cannot download logs.")
+    
+    def update(self):
+        if self.is_installed:
+            repo_path = "/path/to/your/local/repo"
+
+            try:
+                # Load the repository object
+                repo = git.Repo(repo_path)
+
+                # Get the 'origin' remote (or specify a different remote if needed)
+                origin = repo.remote(name='origin')
+
+                # Perform the pull operation
+                pull_info = origin.pull()
+
+                print(f"Successfully pulled changes from origin. Details: {pull_info}")
+
+            except git.InvalidGitRepositoryError:
+                print(f"Error: '{repo_path}' is not a valid Git repository.")
+            except Exception as e:
+                print(f"An error occurred during git pull: {e}")
+        else:
+            print(f"Error: {self.name} is not installed. Cannot update.")
+
+    def display_compose_file(self):
+        compose_file_path = Path(SERVICES / self.folder_name / 'docker-compose.yml')
+        if compose_file_path.exists():
+            with open(compose_file_path, 'r') as file:
+                content = file.read()
+                print(f"Contents of {compose_file_path}:\n{content}")
+        else:
+            print(f"Error: Docker Compose file not found at {compose_file_path}")
+            
+    def configure(self, config: dict):
+        print(f"Configuring {self.name} with provided settings")
 
     def get_base_stats(self):
         cores = 16.0  # fetch cores here
@@ -82,11 +206,13 @@ class InstalledPlugin(Plugin):
         self.base_stats["disk"] = disk
 
     def get_current_stats(self):
-        status = "fetch status here"
-        cpu = 1.0  # fetch used cpu here
-        memory = 1.0  # fetch used memory here
-        disk = 1.0  # fetch used disk space here
+        status =  "running"
+        if not self.is_running:
+            status = "stopped"
+        cpu =  0.0 # fetch current CPU usage here
+        memory = 0.0  # fetch current memory usage here
+        disk = 0.0  # fetch current disk usage here
         self.current_stats["status"] = status
         self.current_stats["cpu"] = cpu
-        self.current_stats["memory"] = memory
-        self.current_stats["disk"] = disk
+        self.current_stats['memory'] = memory
+        self.current_stats['disk'] = disk

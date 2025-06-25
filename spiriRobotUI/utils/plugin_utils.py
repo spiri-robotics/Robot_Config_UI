@@ -1,6 +1,8 @@
+import yaml, subprocess
+
 from nicegui import ui
 from pathlib import Path
-import yaml, subprocess
+
 from spiriRobotUI.utils.Plugin import Plugin, InstalledPlugin
 from spiriRobotUI.settings import INSTALLED_PLUGIN_DIR
 
@@ -28,9 +30,9 @@ def load_plugins():
         logo = details.get('logo')
         url = details.get('url')
         repo = details.get('repo')
-        versions = details.get('versions')
+        folder_name = details.get('folder_name')
 
-        plug = Plugin(name, logo, url, repo, versions)
+        plug = Plugin(name, logo, repo, folder_name)
         plugins[name] = plug
 
 def load_installed():

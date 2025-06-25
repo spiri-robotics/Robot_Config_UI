@@ -1,11 +1,10 @@
 from nicegui import ui
-import subprocess
 
 from spiriRobotUI.components.Header import header
 from spiriRobotUI.components.PluginCard import PluginBrowserCard, PluginInstalledCard
 from spiriRobotUI.components.Sidebar import sidebar
-from spiriRobotUI.utils.Plugin import InstalledPlugin, Plugin
-from spiriRobotUI.utils.plugin_utils import load_plugins, load_installed, plugins, installed_plugins, save_new_plugin
+from spiriRobotUI.utils.Plugin import InstalledPlugin, Plugin, plugins, installed_plugins
+from spiriRobotUI.utils.plugin_utils import load_plugins, load_installed, save_new_plugin
 from spiriRobotUI.utils.styles import styles
 
 def add_installed_card(plugin: InstalledPlugin):
