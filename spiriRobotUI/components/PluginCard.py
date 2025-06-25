@@ -2,7 +2,7 @@ from nicegui import ui
 
 from spiriRobotUI.components.PluginDialog import PluginDialog
 from spiriRobotUI.components.ToggleButton import ToggleButton
-from spiriRobotUI.utils.Plugin import InstalledPlugin, Plugin
+from spiriRobotUI.utils.Plugin import InstalledPlugin, Plugin, plugins, installed_plugins
 from spiriRobotUI.utils.styles import DARK_MODE
 
 
@@ -30,8 +30,8 @@ class PluginBrowserCard:
                 self.install_toggle = ToggleButton(
                     on_label="Install",
                     off_label="Uninstall",
-                    on_switch=lambda: self.plugin.install(),
-                    off_switch=lambda: self.plugin.uninstall(),
+                    on_switch=lambda: self.plugin.install(plugins,  installed_plugins),
+                    off_switch=lambda: self.plugin.uninstall(plugins,  installed_plugins),
                     state=not self.plugin.is_installed,
                     on_color="secondary",
                     off_color="warning",
@@ -59,19 +59,16 @@ class PluginInstalledCard:
                 ui.image(self.plugin.logo).classes("w-24 h-24")
                 self.enable_toggle = ToggleButton(
                     on_label="Disable",
-                    off_label="Enable",
-                    on_switch=lambda: self.plugin.disable,
-                    off_switch=lambda: self.plugin.enable,
-                    state=self.plugin.is_enabled,
+                    off_label="Enable and Start",
+                    on_switch=lambda: self.plugin.stop,
+                    off_switch=lambda: self.plugin.run,
+                    state=self.plugin.is_running,
                     on_color="secondary",
                     off_color="warning",
                 ).classes("w-28 h-24")
             ui.separator()
             with ui.row().classes("justify-between w-full"):
                 ui.label(self.plugin.name.upper()).classes("text-lg font-bold")
-                ui.label(f"Version: {self.plugin.versions[0]}").classes(
-                    "text-lg font-bold"
-                )
             ui.separator()
             ui.label(self.plugin.repo)
             ui.separator()

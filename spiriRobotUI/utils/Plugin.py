@@ -4,6 +4,7 @@ import shutil
 import os
 import docker
 import git
+from spiriRobotUI.settings import PROJECT_ROOT
 
 SERVICES = Path("/services/")
 
@@ -17,26 +18,34 @@ class Plugin:
         self.repo = repo
         self.folder_name = folder_name
         self.is_installed = False
+        self.is_running = False
         self.readme_contents = self.get_readme_contents()
 
-    def install(self):
+    def install(self, plugins, installed_plugins):
         if not self.is_installed:
             try:
                 if os.path.exists(SERVICES/self.folder_name):
                     print(f"Error: {self.name} already installed.")
                     return
 
-                shutil.copytree(f"/robot-config-ui/repos/{self.repo}/services/{self.folder_name}", SERVICES/self.folder_name)
+                shutil.copytree(Path(PROJECT_ROOT, f"/repos/{self.repo}/services/{self.folder_name}"), SERVICES/self.folder_name)
             except shutil.Error as e:
                 print(f"Error copying folder: {e}")
             except OSError as e:
                 print(f"OS Error: {e}")
+            plugins.pop(self.name)
+            installed_plugins[self.name] = InstalledPlugin(
+                self.name,
+                self.logo,
+                self.repo,
+                self.folder_name
+            )
             self.is_installed = True
             print(f"{self.name} installed")
         else:
             print(f"Error: {self.name} already installed")  # This method should be overridden in subclasses
 
-    def uninstall(self):
+    def uninstall(self, plugins,  installed_plugins):
         if self.is_installed:
             try:
                 shutil.rmtree(SERVICES / self.folder_name)
@@ -44,6 +53,13 @@ class Plugin:
                 print(f"Error removing folder: {e}")
             except Exception as e:
                 print(f"Unexpected error: {e}")
+            plugins[self.name] = Plugin(
+                self.name,
+                self.logo,
+                self.repo,
+                self.folder_name
+            )
+            installed_plugins.pop(self.name, None)
             self.is_installed = False
             print(f"{self.name} uninstalled")
         else:
@@ -57,7 +73,16 @@ class Plugin:
             return readme_contents
         else:
             return ""
-
+        
+plugins = {
+    "plugin1": Plugin(
+        "plugin1",
+        "spiriRobotUI/icons/cat_icon.jpg",
+        "robot-config-test-repo",
+        "webapp-example"
+    )
+}
+installed_plugins = {}
 
 class InstalledPlugin(Plugin):
 
@@ -65,8 +90,8 @@ class InstalledPlugin(Plugin):
         super().__init__(name, logo, repo, folder_name)
         self.is_installed = True
         self.is_running = False
-        self.base_stats = {}
-        self.current_stats = {}
+        self.base_stats = {"cores": 0, "memory": 0, "disk": 0}
+        self.current_stats = {"status": "stopped", "cpu": 0.0, "memory": 0.0, "disk": 0.0}
 
     def run(self):
         if not self.is_running:
@@ -117,7 +142,7 @@ class InstalledPlugin(Plugin):
             print(f"Error: {self.name} is not running. Cannot fetch logs.")
 
     def download_logs(self):
-        if self.is_enabled:
+        if self.is_running:
             print(f"Downloading logs for {self.name}")
             try:
                 client = docker.from_env()
@@ -170,11 +195,7 @@ class InstalledPlugin(Plugin):
             print(f"Error: Docker Compose file not found at {compose_file_path}")
             
     def configure(self, config: dict):
-        if self.is_enabled:
-            print(f"Configuring {self.name} with provided settings")
-            # Implement configuration logic here
-        else:
-            print(f"Error: {self.name} is not enabled. Cannot configure.")
+        print(f"Configuring {self.name} with provided settings")
 
     def get_base_stats(self):
         cores = 16.0  # fetch cores here

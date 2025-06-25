@@ -19,8 +19,8 @@ def load_plugins():
     for name, details in file.get('spiri-plugins').items():
         logo = details.get('logo')
         url = details.get('url')
-        versions = details.get('versions')
+        folder_name = details.get('folder_name')
 
-        plug = Plugin(name, logo, url, versions)
+        plug = Plugin(name, logo, url, folder_name)
         plugins[name] = plug
 
