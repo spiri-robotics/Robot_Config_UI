@@ -10,12 +10,25 @@ SERVICES = Path("/services/")
 class Plugin:
     """Base class for all plugins"""
 
+    def __init__(
+            self, 
+            name: str, 
+            logo: str | Path, 
+            repo: str, 
+            versions: list
+        ):
+
     def __init__(self, name: str, logo: str | Path, repo: str, folder_name: str):
         self.name = name
         self.logo = logo
+        self.url = ""
+        self.repo = repo
+        self.versions = versions
+
         self.repo = repo
         self.folder_name = folder_name
         self.is_installed = False
+        self.readme_contents = self.get_readme_contents()
 
     def install(self):
         if not self.is_installed:
@@ -46,6 +59,16 @@ class Plugin:
             print(f"{self.name} uninstalled")
         else:
             print(f"Error: {self.name} not installed")
+
+    def get_readme_contents(self):
+        path = f"repos/{self.repo}/services/{self.name}/README.md"
+        if Path(path).exists():
+            with open(path, "r") as f:
+                readme_contents = f.read()
+            return readme_contents
+        else:
+            return ""
+
 
 class InstalledPlugin(Plugin):
 

@@ -1,13 +1,42 @@
 from nicegui import ui
-from spiriRobotUI.utils.styles import styles
-from spiriRobotUI.components.Sidebar import sidebar
+
 from spiriRobotUI.components.Header import header
-from spiriRobotUI.components.PluginCard import PluginStoreCard, PluginInstalledCard
-from spiriRobotUI.utils.plugin_utils import plugins, installed_plugins, load_plugins
+from spiriRobotUI.components.PluginCard import PluginBrowserCard, PluginInstalledCard
+from spiriRobotUI.components.Sidebar import sidebar
+from spiriRobotUI.components.ToggleButton import ToggleButton
+from spiriRobotUI.utils.Plugin import InstalledPlugin, Plugin
+from spiriRobotUI.utils.plugin_utils import load_plugins
+from spiriRobotUI.utils.styles import styles
+
+plugins = {
+    "plugin1": Plugin(
+        "plugin1",
+        "spiriRobotUI/icons/cat_icon.jpg",
+        "example1",
+        ["1", "2"],
+    )
+}
+installed_plugins = {
+    "plugin1": InstalledPlugin(
+        "plugin1",
+        "spiriRobotUI/icons/cat_icon.jpg",
+        "example1",
+        ["1", "2"],
+    )
+}
+
+def add_new_plugin_card(plugin: Plugin):
+    """Add a new plugin card to the UI."""
+    new_card = PluginBrowserCard(plugin)
+    new_card.render()
+def add_installed_card(plugin: InstalledPlugin):
+    new_card = PluginInstalledCard(plugin)
+    new_card.render()
+
 
 @ui.page("/")
 async def main_ui():
-    styles()
+    await styles()
     sidebar()
     header()
     ui.markdown("## Plug-in Coordinator")
@@ -24,13 +53,14 @@ async def main_ui():
         with ui.tab_panel(one):
             with ui.grid().classes("grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4"):
                 for plug in plugins.values():
-                    p = PluginStoreCard(plug)
+                    p = PluginBrowserCard(plug)
                     p.render()
         with ui.tab_panel(two):
-            if len(installed_plugins) > 0:
-                with ui.grid().classes("grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4"):
-                    for plug in installed_plugins.values():
-                        p = PluginInstalledCard(plug)
-                        await p.render()
+            if len(installed_plugins) == 0:
+                ui.label(
+                    "No plugins installed yet. Please visit the 'Available' tab to install plugins."
+                )
             else:
-                ui.label("No plugins installed yet. Please visit the 'Available' tab to install plugins.")
+                with ui.grid().classes("grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4"):
+                    for plugin_name in plugins:
+                        add_installed_card(installed_plugins[plugin_name])
