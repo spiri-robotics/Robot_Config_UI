@@ -10,21 +10,10 @@ SERVICES = Path("/services/")
 class Plugin:
     """Base class for all plugins"""
 
-    def __init__(
-            self, 
-            name: str, 
-            logo: str | Path, 
-            repo: str, 
-            versions: list
-        ):
-
     def __init__(self, name: str, logo: str | Path, repo: str, folder_name: str):
         self.name = name
         self.logo = logo
         self.url = ""
-        self.repo = repo
-        self.versions = versions
-
         self.repo = repo
         self.folder_name = folder_name
         self.is_installed = False
