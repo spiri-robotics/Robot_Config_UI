@@ -2,7 +2,7 @@ from nicegui import ui
 
 from spiriRobotUI.components.PluginDialog import PluginDialog
 from spiriRobotUI.components.ToggleButton import ToggleButton
-from spiriRobotUI.utils.Plugin import InstalledPlugin, Plugin
+from spiriRobotUI.utils.Plugin import InstalledPlugin, Plugin, plugins, installed_plugins
 from spiriRobotUI.utils.styles import DARK_MODE
 
 
@@ -13,7 +13,6 @@ class PluginBrowserCard:
         self.plugin = plugin
         self.install_toggle = None
 
-    @ui.refreshable
     def render(self):
         browser_card = ui.card().classes(
             f"transition transform hover:scale-105 hover:border-blue-500 {self.base_card_classes}"
@@ -59,19 +58,16 @@ class PluginInstalledCard:
                 ui.image(self.plugin.logo).classes("w-24 h-24")
                 self.enable_toggle = ToggleButton(
                     on_label="Disable",
-                    off_label="Enable",
-                    on_switch=lambda: self.plugin.disable,
-                    off_switch=lambda: self.plugin.enable,
-                    state=self.plugin.is_enabled,
+                    off_label="Enable and Start",
+                    on_switch=lambda: self.plugin.stop,
+                    off_switch=lambda: self.plugin.run,
+                    state=self.plugin.is_running,
                     on_color="secondary",
                     off_color="warning",
                 ).classes("w-28 h-24")
             ui.separator()
             with ui.row().classes("justify-between w-full"):
                 ui.label(self.plugin.name.upper()).classes("text-lg font-bold")
-                ui.label(f"Version: {self.plugin.versions[0]}").classes(
-                    "text-lg font-bold"
-                )
             ui.separator()
             ui.label(self.plugin.repo)
             ui.separator()
