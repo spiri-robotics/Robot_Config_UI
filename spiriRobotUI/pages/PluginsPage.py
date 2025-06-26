@@ -7,8 +7,9 @@ from spiriRobotUI.utils.Plugin import InstalledPlugin, Plugin, plugins, installe
 from spiriRobotUI.utils.plugin_utils import load_plugins
 from spiriRobotUI.utils.styles import styles
 
+installed_cards = []
+browser_cards = []
 def add_new_plugin_card(plugin: Plugin):
-    """Add a new plugin card to the UI."""
     new_card = PluginBrowserCard(plugin)
     new_card.render()
 
@@ -27,7 +28,6 @@ async def main_ui():
     ui.separator()
 
     load_plugins()
-
     with ui.tabs().classes('w-full') as tabs:
         one = ui.tab('Available')
         two = ui.tab('Installed')
@@ -46,3 +46,10 @@ async def main_ui():
                 with ui.grid().classes("grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4"):
                     for plugin_name in plugins:
                         add_installed_card(installed_plugins[plugin_name])
+
+@ui.refreshable
+def browser_grid_ui():
+    with ui.grid().classes("grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4"):
+        for plug in plugins.values():
+            p = PluginBrowserCard(plug)
+            p.render()

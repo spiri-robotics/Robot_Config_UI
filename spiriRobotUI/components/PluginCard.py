@@ -72,7 +72,7 @@ class PluginInstalledCard:
             ui.separator()
             ui.label(self.plugin.repo)
             ui.separator()
-            if self.plugin.is_running:
+            if not self.plugin.is_running:
                 with ui.grid(columns=2).classes("text-xl font-bold"):
                     ui.label("Status")
                     ui.markdown().bind_content_from(
@@ -94,3 +94,18 @@ class PluginInstalledCard:
                     disk_progress = ui.linear_progress().bind_value_from(
                         self.plugin.current_stats["disk"] / self.plugin.base_stats["disk"]
                     )
+                with ui.row():
+                    ui.button("UNINSTALL", on_click=lambda: self.uninstall_plugin())
+                    ui.button("VIEW LOGS", on_click=lambda: self.get_logs())
+                    ui.button("EDIT", on_click=lambda: self.edit_env())
+                    ui.button("RESTART", on_click=lambda: self.restart_plugin())
+                    
+    def uninstall_plugin(self):
+        self.plugin.uninstall()
+        return
+    def get_logs(self):
+        return
+    def edit_env(self):
+        return
+    def restart_plugin(self):
+        return
