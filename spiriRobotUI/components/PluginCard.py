@@ -47,6 +47,7 @@ class PluginInstalledCard:
         self.base_card_classes = ""
         self.plugin = plugin
 
+    @ui.refreshable
     def render(self):
         self.plugin.get_current_stats()
         self.plugin.get_base_stats()
@@ -71,24 +72,25 @@ class PluginInstalledCard:
             ui.separator()
             ui.label(self.plugin.repo)
             ui.separator()
-            with ui.grid(columns=2).classes("text-xl font-bold"):
-                ui.label("Status")
-                ui.markdown().bind_content_from(
-                    self.plugin.current_stats, "status", backward=lambda v: f"{v}"
-                )
+            if self.plugin.is_running:
+                with ui.grid(columns=2).classes("text-xl font-bold"):
+                    ui.label("Status")
+                    ui.markdown().bind_content_from(
+                        self.plugin.current_stats, "status", backward=lambda v: f"{v}"
+                    )
 
-                ui.markdown("CPU usage: ")
-                cpu_progress = ui.linear_progress().bind_value_from(
-                    self.plugin.current_stats["cpu"]
-                )
+                    ui.markdown("CPU usage: ")
+                    cpu_progress = ui.linear_progress().bind_value_from(
+                        self.plugin.current_stats["cpu"]
+                    )
 
-                ui.markdown("Memory usage: ")
-                memory_progress = ui.linear_progress().bind_value_from(
-                    self.plugin.current_stats["memory"]
-                    / self.plugin.base_stats["memory"]
-                )
+                    ui.markdown("Memory usage: ")
+                    memory_progress = ui.linear_progress().bind_value_from(
+                        self.plugin.current_stats["memory"]
+                        / self.plugin.base_stats["memory"]
+                    )
 
-                ui.markdown("Disk usage: ")
-                disk_progress = ui.linear_progress().bind_value_from(
-                    self.plugin.current_stats["disk"] / self.plugin.base_stats["disk"]
-                )
+                    ui.markdown("Disk usage: ")
+                    disk_progress = ui.linear_progress().bind_value_from(
+                        self.plugin.current_stats["disk"] / self.plugin.base_stats["disk"]
+                    )
