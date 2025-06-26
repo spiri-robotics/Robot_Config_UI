@@ -155,27 +155,6 @@ class InstalledPlugin(Plugin):
                 print(f"An unexpected error occurred: {e}")
         else:
             print(f"Error: {self.name} is not running. Cannot fetch logs.")
-
-    def download_logs(self):
-        if self.is_running:
-            print(f"Downloading logs for {self.name}")
-            try:
-                client = docker.from_env()
-                container = client.containers.get(self.folder_name)
-                logs = container.logs().decode('utf-8')
-
-                with open(f"{self.folder_name}_logs.txt", 'w') as f:
-                    f.write(logs)
-                print(f"Logs for container '{self.folder_name}' saved to '{self.folder_name}_logs.txt'")
-
-            except docker.errors.NotFound:
-                print(f"Error: Container '{self.folder_name}' not found.")
-            except docker.errors.APIError as e:
-                print(f"Error interacting with Docker API: {e}")
-            except Exception as e:
-                print(f"An unexpected error occurred: {e}")
-            else:
-                print(f"Error: {self.name} is not enabled. Cannot download logs.")
     
     def update(self):
         if self.is_installed:

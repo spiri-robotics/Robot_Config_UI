@@ -108,7 +108,7 @@ class PluginInstalledCard:
             ui.label("Plugin Logs").classes("text-lg font-bold")
             ui.textarea(logs).classes("w-full h-64").props("readonly")
             with ui.row().classes("justify-end"):
-                ui.button("Download Logs", color='secondary', on_click=lambda: self.plugin.download_logs())
+                ui.button("Download Logs", color='secondary', on_click=lambda: ui.download.content(logs, f"{self.plugin.name}_logs.txt"))
                 ui.button("Close", color='secondary', on_click=dialog.close)
         dialog.open()
 
