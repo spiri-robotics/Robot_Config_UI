@@ -143,11 +143,10 @@ class InstalledPlugin(Plugin):
                 client = docker.from_env()
                 containers = client.containers.list(all=True)
                 for container in containers:
-                    # container.name is the container's name (string)
                     if self.folder_name in container.name:
                         self.container = container
                 logs = self.container.logs().decode('utf-8')
-                print(logs)
+                return logs
             except docker.errors.NotFound:
                 print(f"Error: Container '{self.folder_name}' not found.")
             except docker.errors.APIError as e:
@@ -210,7 +209,7 @@ class InstalledPlugin(Plugin):
         else:
             print(f"Error: Docker Compose file not found at {compose_file_path}")
             
-    def configure(self, config: dict):
+    def edit_env(self, config: dict):
         print(f"Configuring {self.name} with provided settings")
 
     def get_base_stats(self):

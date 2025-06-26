@@ -47,7 +47,6 @@ class PluginInstalledCard:
         self.base_card_classes = ""
         self.plugin = plugin
 
-    @ui.refreshable
     def render(self):
         self.plugin.get_current_stats()
         self.plugin.get_base_stats()
@@ -95,17 +94,27 @@ class PluginInstalledCard:
                         self.plugin.current_stats["disk"] / self.plugin.base_stats["disk"]
                     )
                 with ui.row():
-                    ui.button("UNINSTALL", on_click=lambda: self.uninstall_plugin())
-                    ui.button("VIEW LOGS", on_click=lambda: self.get_logs())
-                    ui.button("EDIT", on_click=lambda: self.edit_env())
-                    ui.button("RESTART", on_click=lambda: self.restart_plugin())
+                    ui.button("UNINSTALL", color='secondary', on_click=lambda: self.uninstall_plugin())
+                    ui.button("VIEW LOGS", color='secondary', on_click=lambda: self.get_logs())
+                    ui.button("EDIT", color='secondary', on_click=lambda: self.edit_env())
+                    ui.button("RESTART", color='secondary', on_click=lambda: self.restart_plugin())
                     
     def uninstall_plugin(self):
         self.plugin.uninstall()
-        return
+    
     def get_logs(self):
-        return
+        logs = self.plugin.get_logs()
+        with ui.dialog() as dialog:
+            ui.label("Plugin Logs").classes("text-lg font-bold")
+            ui.textarea(logs).classes("w-full h-64").props("readonly")
+            with ui.row().classes("justify-end"):
+                ui.button("Download Logs", color='secondary', on_click=lambda: self.plugin.download_logs())
+                ui.button("Close", color='secondary', on_click=dialog.close)
+        dialog.open()
+
     def edit_env(self):
-        return
+        self.plugin.edit_env()
+
     def restart_plugin(self):
-        return
+        self.plugin.stop()
+        self.plugin.run()
