@@ -134,7 +134,6 @@ class InstalledPlugin(Plugin):
             print(f"Error: {self.name} is running. Please stop it before uninstalling.")
         else:
             super().uninstall()
-            self.delete_plugin()
 
     def get_logs(self):
         if self.is_running:
@@ -226,6 +225,5 @@ class InstalledPlugin(Plugin):
         disk = 0.0  # fetch current disk usage here
         self.current_stats["status"] = status
         self.current_stats["cpu"] = cpu 
-
-        def delete_plugin(self):
-            print(f"Deleting {self.name} plugin")
+        self.current_stats["memory"] = memory
+        self.current_stats["disk"] = disk
