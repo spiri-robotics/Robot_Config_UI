@@ -99,6 +99,7 @@ class InstalledPlugin(Plugin):
         self.is_running = False
         self.base_stats = {"cores": 0, "memory": 0, "disk": 0}
         self.current_stats = {"status": "stopped", "cpu": 0.0, "memory": 0.0, "disk": 0.0}
+        self.container = None
 
     def run(self):
         print(f"Running {self.name}...")
@@ -140,8 +141,12 @@ class InstalledPlugin(Plugin):
             print(f"Fetching logs for {self.name}")
             try:
                 client = docker.from_env()
-                container = client.containers.get(self.folder_name)
-                logs = container.logs().decode('utf-8')
+                containers = client.containers.list(all=True)
+                for container in containers:
+                    # container.name is the container's name (string)
+                    if self.folder_name in container.name:
+                        self.container = container
+                logs = self.container.logs().decode('utf-8')
                 print(logs)
             except docker.errors.NotFound:
                 print(f"Error: Container '{self.folder_name}' not found.")
