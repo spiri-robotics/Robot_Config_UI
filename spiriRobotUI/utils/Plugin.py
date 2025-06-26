@@ -26,12 +26,23 @@ class Plugin:
     def install(self):
         if not self.is_installed:
             try:
-                if os.path.exists(SERVICES/self.folder_name):
+                dest_path = SERVICES / self.folder_name
+                if dest_path.exists():
                     print(f"Error: {self.name} already installed.")
                     self.is_installed = True
+                    if  self.name in installed_plugins:
+                        print(f"{self.name} is already in installed plugins.")
+                    else:
+                        installed_plugins[self.name] = InstalledPlugin(
+                            self.name,
+                            self.logo,
+                            self.repo,
+                            self.folder_name
+                        )
                     return
                 
                 app_path = Path("repos") / self.repo / "services" / self.folder_name
+                print(f"Installing {self.name} from {app_path}")
                 shutil.copytree(app_path, SERVICES/self.folder_name)
             except shutil.Error as e:
                 print(f"Error copying folder: {e}")
@@ -46,7 +57,7 @@ class Plugin:
             self.is_installed = True
             print(f"{self.name} installed")
         else:
-            print(f"Error: {self.name} already installed")  # This method should be overridden in subclasses
+            print(f"Error: {self.name} already installed")  
 
     def uninstall(self):
         if self.is_installed:
@@ -90,10 +101,13 @@ class InstalledPlugin(Plugin):
         self.current_stats = {"status": "stopped", "cpu": 0.0, "memory": 0.0, "disk": 0.0}
 
     def run(self):
+        print(f"Running {self.name}...")
         if not self.is_running:
             try:
-                subprocess.run(['docker', 'compose', 'up'],
-                            check=True, cwd=Path(SERVICES / self.folder_name))
+                subprocess.Popen(['docker', 'compose', 'up'],
+                            cwd=Path(SERVICES / self.folder_name), 
+                            stdout=subprocess.PIPE,
+                            stderr=subprocess.PIPE)
             except subprocess.CalledProcessError as e:
                 print(f"Failed: {e}")
             self.is_running = True
@@ -104,8 +118,10 @@ class InstalledPlugin(Plugin):
     def stop(self):
         if self.is_running:
             try:
-                subprocess.run(['docker', 'compose', 'down'],
-                            check=True, cwd=Path(SERVICES / self.folder_name))
+                subprocess.Popen(['docker', 'compose', 'down'],
+                            cwd=Path(SERVICES / self.folder_name), 
+                            stdout=subprocess.PIPE,
+                            stderr=subprocess.PIPE)
             except subprocess.CalledProcessError as e:
                 print(f"Failed: {e}")
             self.is_running = False

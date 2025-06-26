@@ -58,11 +58,11 @@ class PluginInstalledCard:
             with ui.row().classes("justify-between w-full"):
                 ui.image(self.plugin.logo).classes("w-24 h-24")
                 self.enable_toggle = ToggleButton(
-                    on_label="Disable",
-                    off_label="Enable and Start",
-                    on_switch=lambda: self.plugin.stop,
-                    off_switch=lambda: self.plugin.run,
-                    state=self.plugin.is_running,
+                    on_label="Enable and Start",
+                    off_label="Disable",
+                    on_switch=lambda: self.plugin.run(),
+                    off_switch=lambda: self.plugin.stop(),
+                    state=not self.plugin.is_running,
                     on_color="secondary",
                     off_color="warning",
                 ).classes("w-28 h-24")
