@@ -1,9 +1,9 @@
 from pathlib import Path
 import subprocess
 import shutil
-import os
 import docker
 import git
+import psutil
 from spiriRobotUI.settings import PROJECT_ROOT
 
 SERVICES = Path("/services/")
@@ -97,7 +97,6 @@ class InstalledPlugin(Plugin):
         super().__init__(name, logo, repo, folder_name)
         self.is_installed = True
         self.is_running = False
-        self.base_stats = {"cores": 0, "memory": 0, "disk": 0}
         self.current_stats = {"status": "stopped", "cpu": 0.0, "memory": 0.0, "disk": 0.0}
         self.container = None
 
@@ -179,34 +178,54 @@ class InstalledPlugin(Plugin):
         else:
             print(f"Error: {self.name} is not installed. Cannot update.")
 
-    def display_compose_file(self):
+    def get_compose_file(self):
         compose_file_path = Path(SERVICES / self.folder_name / 'docker-compose.yml')
         if compose_file_path.exists():
             with open(compose_file_path, 'r') as file:
-                content = file.read()
-                print(f"Contents of {compose_file_path}:\n{content}")
+                return file.read()
         else:
             print(f"Error: Docker Compose file not found at {compose_file_path}")
+            return "File not found"
             
-    def edit_env(self, config: dict):
-        print(f"Configuring {self.name} with provided settings")
-
-    def get_base_stats(self):
-        cores = 16.0  # fetch cores here
-        memory = 128.0  # fetch total memory here
-        disk = 128.0  # fetch total disk space here
-        self.base_stats["cores"] = cores
-        self.base_stats["memory"] = memory
-        self.base_stats["disk"] = disk
+    def get_env(self):
+        env_file_path = Path(SERVICES / self.folder_name / '.env')
+        if env_file_path.exists():
+            env_vars = {}
+            with open(env_file_path, 'r') as file:
+                for line in file:
+                    if line.strip() and not line.startswith('#'):
+                        key, value = line.strip().split('=', 1)
+                        env_vars[key] = value
+            return env_vars
+        else:
+            print(f"Error: .env file not found at {env_file_path}")
+            return {}
+        
+    def set_env(self, env_vars):
+        env_file_path = Path(SERVICES / self.folder_name / '.env')
+        try:
+            with open(env_file_path, 'w') as file:
+                for key, value in env_vars.items():
+                    file.write(f"{key}={value}\n")
+            print(f"Environment variables updated for {self.name}")
+        except Exception as e:
+            print(f"Error updating .env file: {e}")
 
     def get_current_stats(self):
-        status =  "running"
         if not self.is_running:
-            status = "stopped"
-        cpu =  0.0 # fetch current CPU usage here
-        memory = 0.0  # fetch current memory usage here
-        disk = 0.0  # fetch current disk usage here
-        self.current_stats["status"] = status
-        self.current_stats["cpu"] = cpu 
-        self.current_stats["memory"] = memory
-        self.current_stats["disk"] = disk
+            print(f"{self.name} is not running. Cannot fetch stats.")
+            return
+        client = docker.from_env()
+        containers = client.containers.list(all=True)
+        for container in containers:
+            if self.folder_name in container.name:
+                self.container = container
+        if not self.container:
+            print(f"No running container found for {self.folder_name}")
+            return
+        stats = self.container.stats(stream=False)
+
+        # CPU usage calculation
+        self.current_stats["cpu"] = stats["cpu_stats"]["system_cpu_usage"] * 100.0
+        # Memory usage in MB
+        self.current_stats["memory"] = stats["memory_stats"]["usage"] / (1024 ** 2)

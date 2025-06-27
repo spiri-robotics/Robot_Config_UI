@@ -4,6 +4,7 @@ from spiriRobotUI.components.PluginDialog import PluginDialog
 from spiriRobotUI.components.ToggleButton import ToggleButton
 from spiriRobotUI.utils.Plugin import InstalledPlugin, Plugin, plugins, installed_plugins
 from spiriRobotUI.utils.styles import DARK_MODE
+from spiriRobotUI.utils.system_utils import cores, memory, disk 
 
 
 class PluginBrowserCard:
@@ -49,7 +50,6 @@ class PluginInstalledCard:
 
     def render(self):
         self.plugin.get_current_stats()
-        self.plugin.get_base_stats()
         installed_card = ui.card().classes(f"{self.base_card_classes}")
         if DARK_MODE:
             installed_card.classes(f"dark-card")
@@ -71,7 +71,7 @@ class PluginInstalledCard:
             ui.separator()
             ui.label(self.plugin.repo)
             ui.separator()
-            if not self.plugin.is_running:
+            if self.plugin.is_running:
                 with ui.grid(columns=2).classes("text-xl font-bold"):
                     ui.label("Status")
                     ui.markdown().bind_content_from(
@@ -80,18 +80,18 @@ class PluginInstalledCard:
 
                     ui.markdown("CPU usage: ")
                     cpu_progress = ui.linear_progress().bind_value_from(
-                        self.plugin.current_stats["cpu"]
+                        self.plugin.current_stats["cpu"] 
                     )
 
                     ui.markdown("Memory usage: ")
                     memory_progress = ui.linear_progress().bind_value_from(
                         self.plugin.current_stats["memory"]
-                        / self.plugin.base_stats["memory"]
+                        / memory
                     )
 
                     ui.markdown("Disk usage: ")
                     disk_progress = ui.linear_progress().bind_value_from(
-                        self.plugin.current_stats["disk"] / self.plugin.base_stats["disk"]
+                        self.plugin.current_stats["disk"] / disk
                     )
                 with ui.row():
                     ui.button("UNINSTALL", color='secondary', on_click=lambda: self.uninstall_plugin())
@@ -110,10 +110,26 @@ class PluginInstalledCard:
             with ui.row().classes("justify-end"):
                 ui.button("Download Logs", color='secondary', on_click=lambda: ui.download.content(logs, f"{self.plugin.name}_logs.txt"))
                 ui.button("Close", color='secondary', on_click=dialog.close)
+        dialog.classes("w-3/4 h-3/4")
+        dialog.props("scrollable")
         dialog.open()
 
     def edit_env(self):
-        self.plugin.edit_env()
+        env = self.plugin.get_env()
+        with ui.dialog() as dialog:
+            ui.label("Edit Environment Variables").classes("text-lg font-bold")
+            code = ui.codemirror(env, language='json').classes("w-full h-64")
+            code.props("mode", "application/json")
+            code.props("lineNumbers", True)
+            code.props("theme", "default")
+            code.props("readOnly", False)
+            code.props("tabSize", 2)
+            code.props("autoCloseBrackets", True)
+            code.props("matchBrackets", True)
+            code.props("lineWrapping", True)    
+            with ui.row().classes("justify-end"):
+                ui.button("Save", color='secondary', on_click=lambda: self.plugin.set_env(code.value))
+                ui.button("Close", color='secondary', on_click=dialog.close)
 
     def restart_plugin(self):
         self.plugin.stop()
