@@ -5,6 +5,7 @@ import os
 import docker
 import git
 from spiriRobotUI.settings import PROJECT_ROOT
+from spiriRobotUI.utils.EventBus import event_bus
 
 SERVICES = Path("/services/")
 
@@ -57,7 +58,8 @@ class Plugin:
             self.is_installed = True
             print(f"{self.name} installed")
         else:
-            print(f"Error: {self.name} already installed")  
+            print(f"Error: {self.name} already installed") 
+        event_bus.emit("plugin_installed", self.name)
 
     def uninstall(self):
         if self.is_installed:
@@ -72,6 +74,7 @@ class Plugin:
             print(f"{self.name} uninstalled")
         else:
             print(f"Error: {self.name} not installed")
+        event_bus.emit("plugin_uninstalled", self.name)
 
     def get_readme_contents(self):
         path = f"repos/{self.repo}/services/{self.name}/README.md"

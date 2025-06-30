@@ -13,6 +13,7 @@ class PluginBrowserCard:
         self.plugin = plugin
         self.install_toggle = None
 
+    @ui.refreshable
     def render(self):
         browser_card = ui.card().classes(
             f"transition transform hover:scale-105 hover:border-blue-500 {self.base_card_classes}"
@@ -66,19 +67,17 @@ class PluginInstalledCard:
                     on_color="secondary",
                     off_color="warning",
                 ).classes("w-28 h-24")
-            ui.separator()
-            with ui.row().classes("justify-between w-full"):
-                ui.label(self.plugin.name.upper()).classes("text-lg font-bold")
-            ui.separator()
+            ui.label(self.plugin.name.upper()).classes("text-lg font-bold")
             ui.label(self.plugin.repo)
             ui.separator()
             if not self.plugin.is_running:
-                with ui.grid(columns=2).classes("text-xl font-bold"):
-                    ui.label("Status")
+                with ui.grid(columns=2).classes("w-full text-xl"):
+                    ui.markdown("**Status:**")
                     ui.markdown().bind_content_from(
                         self.plugin.current_stats, "status", backward=lambda v: f"{v}"
                     )
-
+                ui.separator()
+                with ui.grid(columns=2).classes("w-full text-xl"):
                     ui.markdown("CPU usage: ")
                     cpu_progress = ui.linear_progress().bind_value_from(
                         self.plugin.current_stats["cpu"]
@@ -94,6 +93,7 @@ class PluginInstalledCard:
                     disk_progress = ui.linear_progress().bind_value_from(
                         self.plugin.current_stats["disk"] / self.plugin.base_stats["disk"]
                     )
+                ui.separator()
                 with ui.row():
                     ui.button("UNINSTALL", on_click=lambda: self.uninstall_plugin())
                     ui.button("VIEW LOGS", on_click=lambda: self.get_logs())
