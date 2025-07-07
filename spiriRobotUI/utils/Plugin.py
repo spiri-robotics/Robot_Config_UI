@@ -30,6 +30,15 @@ class Plugin:
                 if os.path.exists(SERVICES/self.name):
                     print(f"Error: {self.name} already installed.")
                     self.is_installed = True
+                    if  self.name in installed_plugins:
+                        print(f"{self.name} is already in installed plugins.")
+                    else:
+                        installed_plugins[self.name] = InstalledPlugin(
+                            self.name,
+                            self.logo,
+                            self.repo,
+                            self.folder_name
+                        )
                     return
                 
                 app_path = Path("repos") / self.repo / "services" / self.name
@@ -46,7 +55,7 @@ class Plugin:
             self.is_installed = True
             print(f"{self.name} installed")
         else:
-            print(f"Error: {self.name} already installed")  # This method should be overridden in subclasses
+            print(f"Error: {self.name} already installed")  
 
     def uninstall(self):
         if self.is_installed:
@@ -88,12 +97,16 @@ class InstalledPlugin(Plugin):
         self.is_running = False
         self.base_stats = {"cores": 0, "memory": 0, "disk": 0}
         self.current_stats = {"status": "stopped", "cpu": 0.0, "memory": 0.0, "disk": 0.0}
+        self.container = None
 
     def run(self):
+        print(f"Running {self.name}...")
         if not self.is_running:
             try:
-                subprocess.run(['docker', 'compose', 'up'],
-                            check=True, cwd=Path(SERVICES / self.name))
+                subprocess.Popen(['docker', 'compose', 'up'],
+                            cwd=Path(SERVICES / self.name), 
+                            stdout=subprocess.PIPE,
+                            stderr=subprocess.PIPE)
             except subprocess.CalledProcessError as e:
                 print(f"Failed: {e}")
             self.is_running = True
@@ -104,8 +117,10 @@ class InstalledPlugin(Plugin):
     def stop(self):
         if self.is_running:
             try:
-                subprocess.run(['docker', 'compose', 'down'],
-                            check=True, cwd=Path(SERVICES / self.folder_name))
+                subprocess.Popen(['docker', 'compose', 'down'],
+                            cwd=Path(SERVICES / self.folder_name), 
+                            stdout=subprocess.PIPE,
+                            stderr=subprocess.PIPE)
             except subprocess.CalledProcessError as e:
                 print(f"Failed: {e}")
             self.is_running = False
@@ -124,9 +139,12 @@ class InstalledPlugin(Plugin):
             print(f"Fetching logs for {self.name}")
             try:
                 client = docker.from_env()
-                container = client.containers.get(self.name)
-                logs = container.logs().decode('utf-8')
-                print(logs)
+                containers = client.containers.list(all=True)
+                for container in containers:
+                    if self.name in container.name:
+                        self.container = container
+                logs = self.container.logs().decode('utf-8')
+                return logs
             except docker.errors.NotFound:
                 print(f"Error: Container '{self.name}' not found.")
             except docker.errors.APIError as e:
@@ -135,27 +153,6 @@ class InstalledPlugin(Plugin):
                 print(f"An unexpected error occurred: {e}")
         else:
             print(f"Error: {self.name} is not running. Cannot fetch logs.")
-
-    def download_logs(self):
-        if self.is_running:
-            print(f"Downloading logs for {self.name}")
-            try:
-                client = docker.from_env()
-                container = client.containers.get(self.name)
-                logs = container.logs().decode('utf-8')
-
-                with open(f"{self.name}_logs.txt", 'w') as f:
-                    f.write(logs)
-                print(f"Logs for container '{self.name}' saved to '{self.name}_logs.txt'")
-
-            except docker.errors.NotFound:
-                print(f"Error: Container '{self.name}' not found.")
-            except docker.errors.APIError as e:
-                print(f"Error interacting with Docker API: {e}")
-            except Exception as e:
-                print(f"An unexpected error occurred: {e}")
-            else:
-                print(f"Error: {self.name} is not enabled. Cannot download logs.")
     
     def update(self):
         if self.is_installed:
@@ -189,7 +186,7 @@ class InstalledPlugin(Plugin):
         else:
             print(f"Error: Docker Compose file not found at {compose_file_path}")
             
-    def configure(self, config: dict):
+    def edit_env(self, config: dict):
         print(f"Configuring {self.name} with provided settings")
 
     def get_base_stats(self):
@@ -208,6 +205,6 @@ class InstalledPlugin(Plugin):
         memory = 0.0  # fetch current memory usage here
         disk = 0.0  # fetch current disk usage here
         self.current_stats["status"] = status
-        self.current_stats["cpu"] = cpu
-        self.current_stats['memory'] = memory
-        self.current_stats['disk'] = disk
+        self.current_stats["cpu"] = cpu 
+        self.current_stats["memory"] = memory
+        self.current_stats["disk"] = disk

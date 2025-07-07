@@ -57,11 +57,11 @@ class PluginInstalledCard:
             with ui.row().classes("justify-between w-full"):
                 ui.image(self.plugin.logo).classes("w-24 h-24")
                 self.enable_toggle = ToggleButton(
-                    on_label="Disable",
-                    off_label="Enable and Start",
-                    on_switch=lambda: self.plugin.stop,
-                    off_switch=lambda: self.plugin.run,
-                    state=self.plugin.is_running,
+                    on_label="Enable and Start",
+                    off_label="Disable",
+                    on_switch=lambda: self.plugin.run(),
+                    off_switch=lambda: self.plugin.stop(),
+                    state=not self.plugin.is_running,
                     on_color="secondary",
                     off_color="warning",
                 ).classes("w-28 h-24")
@@ -71,24 +71,50 @@ class PluginInstalledCard:
             ui.separator()
             ui.label(self.plugin.repo)
             ui.separator()
-            with ui.grid(columns=2).classes("text-xl font-bold"):
-                ui.label("Status")
-                ui.markdown().bind_content_from(
-                    self.plugin.current_stats, "status", backward=lambda v: f"{v}"
-                )
+            if not self.plugin.is_running:
+                with ui.grid(columns=2).classes("text-xl font-bold"):
+                    ui.label("Status")
+                    ui.markdown().bind_content_from(
+                        self.plugin.current_stats, "status", backward=lambda v: f"{v}"
+                    )
 
-                ui.markdown("CPU usage: ")
-                cpu_progress = ui.linear_progress().bind_value_from(
-                    self.plugin.current_stats["cpu"]
-                )
+                    ui.markdown("CPU usage: ")
+                    cpu_progress = ui.linear_progress().bind_value_from(
+                        self.plugin.current_stats["cpu"]
+                    )
 
-                ui.markdown("Memory usage: ")
-                memory_progress = ui.linear_progress().bind_value_from(
-                    self.plugin.current_stats["memory"]
-                    / self.plugin.base_stats["memory"]
-                )
+                    ui.markdown("Memory usage: ")
+                    memory_progress = ui.linear_progress().bind_value_from(
+                        self.plugin.current_stats["memory"]
+                        / self.plugin.base_stats["memory"]
+                    )
 
-                ui.markdown("Disk usage: ")
-                disk_progress = ui.linear_progress().bind_value_from(
-                    self.plugin.current_stats["disk"] / self.plugin.base_stats["disk"]
-                )
+                    ui.markdown("Disk usage: ")
+                    disk_progress = ui.linear_progress().bind_value_from(
+                        self.plugin.current_stats["disk"] / self.plugin.base_stats["disk"]
+                    )
+                with ui.row():
+                    ui.button("UNINSTALL", color='secondary', on_click=lambda: self.uninstall_plugin())
+                    ui.button("VIEW LOGS", color='secondary', on_click=lambda: self.get_logs())
+                    ui.button("EDIT", color='secondary', on_click=lambda: self.edit_env())
+                    ui.button("RESTART", color='secondary', on_click=lambda: self.restart_plugin())
+                    
+    def uninstall_plugin(self):
+        self.plugin.uninstall()
+    
+    def get_logs(self):
+        logs = self.plugin.get_logs()
+        with ui.dialog() as dialog:
+            ui.label("Plugin Logs").classes("text-lg font-bold")
+            ui.textarea(logs).classes("w-full h-64").props("readonly")
+            with ui.row().classes("justify-end"):
+                ui.button("Download Logs", color='secondary', on_click=lambda: ui.download.content(logs, f"{self.plugin.name}_logs.txt"))
+                ui.button("Close", color='secondary', on_click=dialog.close)
+        dialog.open()
+
+    def edit_env(self):
+        self.plugin.edit_env()
+
+    def restart_plugin(self):
+        self.plugin.stop()
+        self.plugin.run()
