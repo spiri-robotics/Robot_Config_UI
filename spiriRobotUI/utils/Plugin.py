@@ -3,7 +3,7 @@ import subprocess
 import shutil
 import docker
 import git
-import psutil
+from nicegui import ui
 from spiriRobotUI.settings import PROJECT_ROOT
 
 SERVICES = Path("/services/")
@@ -44,6 +44,12 @@ class Plugin:
                 app_path = Path("repos") / self.repo / "services" / self.folder_name
                 print(f"Installing {self.name} from {app_path}")
                 shutil.copytree(app_path, SERVICES/self.folder_name)
+
+                # Add a default .env if one doesn't exist in the destination
+                env_file = SERVICES / self.folder_name / ".env"
+                if not env_file.exists():
+                    with open(env_file, "w") as f:
+                        f.write("# Default environment variables\n")
             except shutil.Error as e:
                 print(f"Error copying folder: {e}")
             except OSError as e:
@@ -110,6 +116,9 @@ class InstalledPlugin(Plugin):
                             stderr=subprocess.PIPE)
             except subprocess.CalledProcessError as e:
                 print(f"Failed: {e}")
+            except FileNotFoundError:
+                print("Error: Docker Compose not found. Please ensure Docker is installed and running.")
+                return
             self.is_running = True
             print(f"{self.name} is running")
         else:
@@ -131,7 +140,7 @@ class InstalledPlugin(Plugin):
     
     def uninstall(self):
         if self.is_running:
-            print(f"Error: {self.name} is running. Please stop it before uninstalling.")
+            ui.notify(f"Error: {self.name} is running. Please stop it before uninstalling.")
         else:
             super().uninstall()
 
@@ -145,6 +154,11 @@ class InstalledPlugin(Plugin):
                     if self.folder_name in container.name:
                         self.container = container
                 logs = self.container.logs().decode('utf-8')
+                log_file_path = Path(PROJECT_ROOT) / "logs.txt"
+                with open(log_file_path, "a") as log_file:
+                    log_file.write(f"\n--- Logs for {self.name} ---\n")
+                    log_file.write(logs)
+                    log_file.write("\n")
                 return logs
             except docker.errors.NotFound:
                 print(f"Error: Container '{self.folder_name}' not found.")
@@ -190,23 +204,17 @@ class InstalledPlugin(Plugin):
     def get_env(self):
         env_file_path = Path(SERVICES / self.folder_name / '.env')
         if env_file_path.exists():
-            env_vars = {}
             with open(env_file_path, 'r') as file:
-                for line in file:
-                    if line.strip() and not line.startswith('#'):
-                        key, value = line.strip().split('=', 1)
-                        env_vars[key] = value
-            return env_vars
+                return file.read()
         else:
             print(f"Error: .env file not found at {env_file_path}")
-            return {}
-        
-    def set_env(self, env_vars):
+            return ""
+
+    def set_env(self, env_text):
         env_file_path = Path(SERVICES / self.folder_name / '.env')
         try:
             with open(env_file_path, 'w') as file:
-                for key, value in env_vars.items():
-                    file.write(f"{key}={value}\n")
+                file.write(env_text)
             print(f"Environment variables updated for {self.name}")
         except Exception as e:
             print(f"Error updating .env file: {e}")

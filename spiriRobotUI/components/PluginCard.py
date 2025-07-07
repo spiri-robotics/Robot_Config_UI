@@ -105,11 +105,12 @@ class PluginInstalledCard:
     def get_logs(self):
         logs = self.plugin.get_logs()
         with ui.dialog() as dialog:
-            ui.label("Plugin Logs").classes("text-lg font-bold")
-            ui.textarea(logs).classes("w-full h-64").props("readonly")
-            with ui.row().classes("justify-end"):
-                ui.button("Download Logs", color='secondary', on_click=lambda: ui.download.content(logs, f"{self.plugin.name}_logs.txt"))
-                ui.button("Close", color='secondary', on_click=dialog.close)
+            with ui.card():
+                ui.label("Plugin Logs").classes("text-lg font-bold")
+                ui.textarea(logs).classes("w-full h-64").props("readonly")
+                with ui.row().classes("justify-end"):
+                    ui.button('', icon='download', on_click=lambda: ui.download.file('logs.txt'), color='secondary')
+                    ui.button("Close", color='secondary', on_click=dialog.close)
         dialog.classes("w-3/4 h-3/4")
         dialog.props("scrollable")
         dialog.open()
@@ -117,19 +118,16 @@ class PluginInstalledCard:
     def edit_env(self):
         env = self.plugin.get_env()
         with ui.dialog() as dialog:
-            ui.label("Edit Environment Variables").classes("text-lg font-bold")
-            code = ui.codemirror(env, language='json').classes("w-full h-64")
-            code.props("mode", "application/json")
-            code.props("lineNumbers", True)
-            code.props("theme", "default")
-            code.props("readOnly", False)
-            code.props("tabSize", 2)
-            code.props("autoCloseBrackets", True)
-            code.props("matchBrackets", True)
-            code.props("lineWrapping", True)    
-            with ui.row().classes("justify-end"):
-                ui.button("Save", color='secondary', on_click=lambda: self.plugin.set_env(code.value))
-                ui.button("Close", color='secondary', on_click=dialog.close)
+            with ui.card().classes("w-3/4 h-3/4"):
+                ui.label("Edit Environment Variables").classes("text-lg font-bold")
+                code = ui.codemirror(env, language='json').classes("w-full h-64")
+                code.props(
+                    'mode="application/json" line-numbers theme="default" readonly=false tab-size=2 auto-close-brackets match-brackets line-wrapping'
+                )
+                with ui.row().classes("justify-end"):
+                    ui.button("Save", color='secondary', on_click=lambda: self.plugin.set_env(code.value))
+                    ui.button("Close", color='secondary', on_click=dialog.close)
+        dialog.open()
 
     def restart_plugin(self):
         self.plugin.stop()
