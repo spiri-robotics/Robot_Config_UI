@@ -25,7 +25,7 @@ class PluginBrowserCard:
                 "w-full h-48 object-cover cursor-pointer"
             )
             with ui.row().classes("items-center justify-between w-full"):
-                ui.label(self.plugin.name.upper()).classes("text-lg font-bold")
+                ui.label(self.plugin.name.replace('-', ' ').title()).classes("text-xl font-normal")
                 self.install_toggle = ToggleButton(
                     on_label="Install",
                     off_label="Uninstall",
@@ -67,7 +67,7 @@ class PluginInstalledCard:
                 ).classes("w-28 h-24")
             ui.separator()
             with ui.row().classes("justify-between w-full"):
-                ui.label(self.plugin.name.upper()).classes("text-lg font-bold")
+                ui.label(self.plugin.name.replace('-', ' ').capitalize()).classes("text-lg font-bold")
             ui.separator()
             ui.label(self.plugin.repo)
             ui.separator()

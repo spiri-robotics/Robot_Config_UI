@@ -4,6 +4,7 @@ from pathlib import Path
 
 SERVICES = Path("/services/")
 
+plugins = {}
 installed_plugins = {}
 
 class Plugin:
@@ -13,16 +14,12 @@ class Plugin:
             self, 
             name: str, 
             logo: str | Path, 
-            # url: str,
-            repo: str, 
-            folder_name: str
+            repo: str | Path
         ):
 
         self.name = name
         self.logo = logo
-        self.url = ''
         self.repo = repo
-        self.folder_name = folder_name
 
         self.is_installed = False
         self.readme_contents = self.get_readme_contents()
@@ -30,13 +27,13 @@ class Plugin:
     def install(self):
         if not self.is_installed:
             try:
-                if os.path.exists(SERVICES/self.folder_name):
+                if os.path.exists(SERVICES/self.name):
                     print(f"Error: {self.name} already installed.")
                     self.is_installed = True
                     return
                 
-                app_path = Path("repos") / self.repo / "services" / self.folder_name
-                shutil.copytree(app_path, SERVICES/self.folder_name)
+                app_path = Path("repos") / self.repo / "services" / self.name
+                shutil.copytree(app_path, SERVICES/self.name)
             except shutil.Error as e:
                 print(f"Error copying folder: {e}")
             except OSError as e:
@@ -44,8 +41,7 @@ class Plugin:
             installed_plugins[self.name] = InstalledPlugin(
                 self.name,
                 self.logo,
-                self.repo,
-                self.folder_name
+                self.repo
             )
             self.is_installed = True
             print(f"{self.name} installed")
@@ -55,7 +51,7 @@ class Plugin:
     def uninstall(self):
         if self.is_installed:
             try:
-                shutil.rmtree(SERVICES / self.folder_name)
+                shutil.rmtree(SERVICES / self.name)
             except OSError as e:
                 print(f"Error removing folder: {e}")
             except Exception as e:
@@ -76,19 +72,18 @@ class Plugin:
         else:
             return ""
         
-plugins = {
-    "plugin1": Plugin(
-        "plugin1",
-        "spiriRobotUI/icons/cat_icon.jpg",
-        "robot-config-test-repo",
-        "webapp-example",
-    )
-}
+# plugins = {
+#     "webapp-example": Plugin(
+#         "webapp-example",
+#         "spiriRobotUI/icons/cat_icon.jpg",
+#         "robot-config-test-repo"
+#     )
+# }
 
 class InstalledPlugin(Plugin):
 
-    def __init__(self, name, logo, repo, folder_name):
-        super().__init__(name, logo, repo, folder_name)
+    def __init__(self, name, logo, repo):
+        super().__init__(name, logo, repo)
         self.is_installed = True
         self.is_running = False
         self.base_stats = {"cores": 0, "memory": 0, "disk": 0}
@@ -98,7 +93,7 @@ class InstalledPlugin(Plugin):
         if not self.is_running:
             try:
                 subprocess.run(['docker', 'compose', 'up'],
-                            check=True, cwd=Path(SERVICES / self.folder_name))
+                            check=True, cwd=Path(SERVICES / self.name))
             except subprocess.CalledProcessError as e:
                 print(f"Failed: {e}")
             self.is_running = True
@@ -129,11 +124,11 @@ class InstalledPlugin(Plugin):
             print(f"Fetching logs for {self.name}")
             try:
                 client = docker.from_env()
-                container = client.containers.get(self.folder_name)
+                container = client.containers.get(self.name)
                 logs = container.logs().decode('utf-8')
                 print(logs)
             except docker.errors.NotFound:
-                print(f"Error: Container '{self.folder_name}' not found.")
+                print(f"Error: Container '{self.name}' not found.")
             except docker.errors.APIError as e:
                 print(f"Error interacting with Docker API: {e}")
             except Exception as e:
@@ -146,15 +141,15 @@ class InstalledPlugin(Plugin):
             print(f"Downloading logs for {self.name}")
             try:
                 client = docker.from_env()
-                container = client.containers.get(self.folder_name)
+                container = client.containers.get(self.name)
                 logs = container.logs().decode('utf-8')
 
-                with open(f"{self.folder_name}_logs.txt", 'w') as f:
+                with open(f"{self.name}_logs.txt", 'w') as f:
                     f.write(logs)
-                print(f"Logs for container '{self.folder_name}' saved to '{self.folder_name}_logs.txt'")
+                print(f"Logs for container '{self.name}' saved to '{self.name}_logs.txt'")
 
             except docker.errors.NotFound:
-                print(f"Error: Container '{self.folder_name}' not found.")
+                print(f"Error: Container '{self.name}' not found.")
             except docker.errors.APIError as e:
                 print(f"Error interacting with Docker API: {e}")
             except Exception as e:
@@ -186,7 +181,7 @@ class InstalledPlugin(Plugin):
             print(f"Error: {self.name} is not installed. Cannot update.")
 
     def display_compose_file(self):
-        compose_file_path = Path(SERVICES / self.folder_name / 'docker-compose.yml')
+        compose_file_path = Path(SERVICES / self.name / 'docker-compose.yml')
         if compose_file_path.exists():
             with open(compose_file_path, 'r') as file:
                 content = file.read()

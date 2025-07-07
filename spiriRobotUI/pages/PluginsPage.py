@@ -21,7 +21,7 @@ async def main_ui():
     with ui.dialog() as d, ui.card().classes('p-5 justify-center w-full'):
         ui.label('Link A Plugin').classes('text-h5')
         link = ui.input('Repository link', placeholder='www.git.spirirobotics.com/your-repo').classes('w-full')
-        check = ui.checkbox('Install all plugins in repository')
+        check = ui.checkbox('Install all plugins in repository', value=False)
         with ui.row().classes('justify-center w-full'):
             ui.button('go away', color='secondary', on_click=lambda: d.submit(None))
             ui.button('submit', color='secondary', on_click=lambda l=link, c=check: submit(l, c))
@@ -40,7 +40,7 @@ async def main_ui():
 
             if link is not None:
                 print(check)
-                save_new_plugin(link)
+                save_new_plugin(link, check)
 
     ui.markdown("## Plug-in Coordinator")
     with ui.row(align_items='end').classes('w-full justify-between'):

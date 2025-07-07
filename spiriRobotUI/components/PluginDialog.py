@@ -24,7 +24,7 @@ class PluginDialog:
                     )
                     with name_card:
                         with ui.row().classes("w-full justify-between"):
-                            ui.label(self.plugin.name.upper()).classes("text-3xl font-semibold")
+                            ui.label(self.plugin.name.replace('-', ' ').title()).classes("text-3xl font-light")
                             self.install_toggle = ToggleButton(
                                 on_label="Install",
                                 off_label="Uninstall",
