@@ -131,4 +131,5 @@ class PluginInstalledCard:
 
     async def restart_plugin(self):
         await self.plugin.stop()
+        print(self.plugin.is_running)
         await self.plugin.run()

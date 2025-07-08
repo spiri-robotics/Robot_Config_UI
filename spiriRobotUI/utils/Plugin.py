@@ -5,6 +5,9 @@ import docker
 import git
 from nicegui import ui
 from spiriRobotUI.settings import PROJECT_ROOT
+from loguru import logger
+import time
+import asyncio
 
 SERVICES = Path("/services/")
 
@@ -114,6 +117,17 @@ class InstalledPlugin(Plugin):
                             cwd=Path(SERVICES / self.folder_name), 
                             stdout=subprocess.PIPE,
                             stderr=subprocess.PIPE)
+                await asyncio.sleep(2)
+                # Find and assign the new container
+                client = docker.from_env()
+                containers = client.containers.list(all=True)
+                for container in containers:
+                    if self.folder_name in container.name:
+                        self.container = container
+                        break
+                else:
+                    self.container = None
+                    print(f"No running container found for {self.folder_name}")
             except subprocess.CalledProcessError as e:
                 print(f"Failed: {e}")
                 return
@@ -134,7 +148,24 @@ class InstalledPlugin(Plugin):
                             stderr=subprocess.PIPE)
             except subprocess.CalledProcessError as e:
                 print(f"Failed: {e}")
+
+            while True:
+                try:
+                    self.container.reload()  # Refresh container status
+                    status = self.container.status
+                    if status == "exited" or status == "stopped":
+                        break
+                except docker.errors.NotFound:
+                    # Container has been removed, consider it stopped
+                    break
+                except Exception as e:
+                    logger.error(f"Error checking container status: {e}")
+                    break
+                time.sleep(1)
+                logger.debug(f"Waiting for container to stop... {status}")
+
             self.is_running = False
+            self.container = None
             print(f"{self.name} stopped")
         else:
             print(f"Error: {self.name} is not running")
