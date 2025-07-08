@@ -9,6 +9,7 @@ from spiriRobotUI.utils.styles import styles
 
 installed_cards = []
 browser_cards = []
+
 def add_new_plugin_card(plugin: Plugin):
     new_card = PluginBrowserCard(plugin)
     new_card.render()

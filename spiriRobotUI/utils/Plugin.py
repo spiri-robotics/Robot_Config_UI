@@ -273,6 +273,7 @@ class InstalledPlugin(Plugin):
             # This is a placeholder; real CPU % calculation is more complex
             self.current_stats["cpu"] = stats["cpu_stats"].get("system_cpu_usage", 0.0)
             self.current_stats["memory"] = stats["memory_stats"]["usage"] / (1024 ** 2)
+            self.current_stats["disk"] = 10 # stats["blkio_stats"]["io_service_bytes_recursive"][0]["value"] / (1024 ** 2) if stats["blkio_stats"]["io_service_bytes_recursive"] else 0.0
             self.current_stats["status"] = self.container.status
         except Exception as e:
             print(f"Error fetching stats: {e}")
