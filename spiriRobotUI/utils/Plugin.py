@@ -205,7 +205,7 @@ class InstalledPlugin(Plugin):
     
     def update(self):
         if self.is_installed:
-            repo_path = "/path/to/your/local/repo"
+            repo_path = str(PROJECT_ROOT) + "/repos/" + self.repo
 
             try:
                 # Load the repository object
