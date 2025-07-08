@@ -50,7 +50,7 @@ class PluginInstalledCard:
         self.plugin = plugin
 
     async def render(self):
-        asyncio.create_task(self.plugin.update_stats_periodically())
+        #asyncio.create_task(self.plugin.update_stats_periodically())
         installed_card = ui.card().classes(f"{self.base_card_classes}")
         if DARK_MODE:
             installed_card.classes(f"dark-card")
