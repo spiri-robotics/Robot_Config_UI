@@ -113,7 +113,7 @@ class InstalledPlugin(Plugin):
         print(f"Running {self.name}...")
         if not self.is_running:
             try:
-                subprocess.Popen(['docker', 'compose', 'up'],
+                subprocess.Popen(['docker', 'compose', 'up', '-d'],
                             cwd=Path(SERVICES / self.folder_name), 
                             stdout=subprocess.PIPE,
                             stderr=subprocess.PIPE)
@@ -121,11 +121,13 @@ class InstalledPlugin(Plugin):
                 # Find and assign the new container
                 client = docker.from_env()
                 containers = client.containers.list(all=True)
+                found = False
                 for container in containers:
                     if self.folder_name in container.name:
                         self.container = container
+                        found = True
                         break
-                else:
+                if not found:
                     self.container = None
                     print(f"No running container found for {self.folder_name}")
             except subprocess.CalledProcessError as e:
@@ -257,15 +259,20 @@ class InstalledPlugin(Plugin):
             return
         client = docker.from_env()
         containers = client.containers.list(all=True)
+        found = False
         for container in containers:
             if self.folder_name in container.name:
                 self.container = container
-        if not self.container:
+                found = True
+                break
+        if not found or not self.container:
             print(f"No running container found for {self.folder_name}")
             return
-        stats = self.container.stats(stream=False)
-
-        # CPU usage calculation
-        self.current_stats["cpu"] = stats["cpu_stats"]["system_cpu_usage"] * 100.0
-        # Memory usage in MB
-        self.current_stats["memory"] = stats["memory_stats"]["usage"] / (1024 ** 2)
+        try:
+            stats = self.container.stats(stream=False)
+            # This is a placeholder; real CPU % calculation is more complex
+            self.current_stats["cpu"] = stats["cpu_stats"].get("system_cpu_usage", 0.0)
+            self.current_stats["memory"] = stats["memory_stats"]["usage"] / (1024 ** 2)
+            self.current_stats["status"] = self.container.status
+        except Exception as e:
+            print(f"Error fetching stats: {e}")
