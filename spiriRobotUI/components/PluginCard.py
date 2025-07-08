@@ -5,6 +5,7 @@ from spiriRobotUI.components.ToggleButton import ToggleButton
 from spiriRobotUI.utils.Plugin import InstalledPlugin, Plugin, plugins, installed_plugins
 from spiriRobotUI.utils.styles import DARK_MODE
 from spiriRobotUI.utils.system_utils import cores, memory, disk 
+import asyncio
 
 
 class PluginBrowserCard:
@@ -49,7 +50,7 @@ class PluginInstalledCard:
         self.plugin = plugin
 
     async def render(self):
-        self.plugin.get_current_stats()
+        asyncio.create_task(self.plugin.update_stats_periodically())
         installed_card = ui.card().classes(f"{self.base_card_classes}")
         if DARK_MODE:
             installed_card.classes(f"dark-card")
@@ -79,19 +80,14 @@ class PluginInstalledCard:
                     )
 
                     ui.markdown("CPU usage: ")
-                    cpu_progress = ui.linear_progress().bind_value_from(
-                        self.plugin.current_stats["cpu"] 
-                    )
-
+                    cpu_progress = ui.linear_progress().bind_value_from(lambda: self.plugin.current_stats["cpu"])
                     ui.markdown("Memory usage: ")
                     memory_progress = ui.linear_progress().bind_value_from(
-                        self.plugin.current_stats["memory"]
-                        / memory
+                        lambda: self.plugin.current_stats["memory"] / self.plugin.current_stats["memory_limit"]
                     )
-
                     ui.markdown("Disk usage: ")
                     disk_progress = ui.linear_progress().bind_value_from(
-                        self.plugin.current_stats["disk"] / disk
+                        lambda: self.plugin.current_stats["disk"] / disk
                     )
                 with ui.row():
                     ui.button("UNINSTALL", color='secondary', on_click=lambda: self.uninstall_plugin())

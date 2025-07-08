@@ -270,10 +270,21 @@ class InstalledPlugin(Plugin):
             return
         try:
             stats = self.container.stats(stream=False)
-            # This is a placeholder; real CPU % calculation is more complex
-            self.current_stats["cpu"] = stats["cpu_stats"].get("system_cpu_usage", 0.0)
+            # CPU calculation (simplified)
+            cpu_delta = stats["cpu_stats"]["cpu_usage"]["total_usage"] - stats["precpu_stats"]["cpu_usage"]["total_usage"]
+            system_delta = stats["cpu_stats"]["system_cpu_usage"] - stats["precpu_stats"]["system_cpu_usage"]
+            cpu_percent = 0.0
+            if system_delta > 0 and cpu_delta > 0:
+                cpu_percent = (cpu_delta / system_delta) * len(stats["cpu_stats"]["cpu_usage"]["percpu_usage"])
+            self.current_stats["cpu"] = cpu_percent  
             self.current_stats["memory"] = stats["memory_stats"]["usage"] / (1024 ** 2)
-            self.current_stats["disk"] = 10 # stats["blkio_stats"]["io_service_bytes_recursive"][0]["value"] / (1024 ** 2) if stats["blkio_stats"]["io_service_bytes_recursive"] else 0.0
+            self.current_stats["memory_limit"] = stats["memory_stats"]["limit"] / (1024 ** 2)
+            self.current_stats["disk"] = 10  # Placeholder
             self.current_stats["status"] = self.container.status
         except Exception as e:
             print(f"Error fetching stats: {e}")
+
+    async def update_stats_periodically(self):
+        while self.is_running:
+            self.get_current_stats()
+            await asyncio.sleep(1)
