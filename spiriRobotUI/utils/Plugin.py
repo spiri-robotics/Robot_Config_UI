@@ -106,7 +106,7 @@ class InstalledPlugin(Plugin):
         self.current_stats = {"status": "stopped", "cpu": 0.0, "memory": 0.0, "disk": 0.0}
         self.container = None
 
-    def run(self):
+    async def run(self):
         print(f"Running {self.name}...")
         if not self.is_running:
             try:
@@ -116,6 +116,7 @@ class InstalledPlugin(Plugin):
                             stderr=subprocess.PIPE)
             except subprocess.CalledProcessError as e:
                 print(f"Failed: {e}")
+                return
             except FileNotFoundError:
                 print("Error: Docker Compose not found. Please ensure Docker is installed and running.")
                 return
@@ -124,7 +125,7 @@ class InstalledPlugin(Plugin):
         else:
             print(f"Error: {self.name} is already running")
 
-    def stop(self):
+    async def stop(self):
         if self.is_running:
             try:
                 subprocess.Popen(['docker', 'compose', 'down'],

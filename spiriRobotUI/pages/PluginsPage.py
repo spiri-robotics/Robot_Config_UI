@@ -13,9 +13,9 @@ def add_new_plugin_card(plugin: Plugin):
     new_card = PluginBrowserCard(plugin)
     new_card.render()
 
-def add_installed_card(plugin: InstalledPlugin):
+async def add_installed_card(plugin: InstalledPlugin):
     new_card = PluginInstalledCard(plugin)
-    new_card.render()
+    await new_card.render()
 
 @ui.page("/")
 async def main_ui():
@@ -45,7 +45,7 @@ async def main_ui():
             else:
                 with ui.grid().classes("grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4"):
                     for plugin_name in plugins:
-                        add_installed_card(installed_plugins[plugin_name])
+                        await add_installed_card(installed_plugins[plugin_name])
 
 @ui.refreshable
 def browser_grid_ui():

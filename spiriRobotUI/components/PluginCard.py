@@ -48,7 +48,7 @@ class PluginInstalledCard:
         self.base_card_classes = ""
         self.plugin = plugin
 
-    def render(self):
+    async def render(self):
         self.plugin.get_current_stats()
         installed_card = ui.card().classes(f"{self.base_card_classes}")
         if DARK_MODE:
@@ -59,8 +59,8 @@ class PluginInstalledCard:
                 self.enable_toggle = ToggleButton(
                     on_label="Enable and Start",
                     off_label="Disable",
-                    on_switch=lambda: self.plugin.run(),
-                    off_switch=lambda: self.plugin.stop(),
+                    on_switch=self.plugin.run,
+                    off_switch=self.plugin.stop,
                     state=not self.plugin.is_running,
                     on_color="secondary",
                     off_color="warning",
@@ -129,6 +129,6 @@ class PluginInstalledCard:
                     ui.button("Close", color='secondary', on_click=dialog.close)
         dialog.open()
 
-    def restart_plugin(self):
-        self.plugin.stop()
-        self.plugin.run()
+    async def restart_plugin(self):
+        await self.plugin.stop()
+        await self.plugin.run()
