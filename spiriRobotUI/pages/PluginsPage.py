@@ -65,10 +65,12 @@ async def installed_grid_ui():
 def on_plugin_installed(plugin_name: str):
     plugin = installed_plugins[plugin_name]
     installed_cards[plugin.name] = PluginInstalledCard(plugin)
+    browser_cards[plugin_name].render.refresh()
     installed_grid_ui.refresh()
 
 def on_plugin_uninstalled(plugin_name: str):
     del installed_cards[plugin_name]
+    browser_cards[plugin_name].render.refresh()
     installed_grid_ui.refresh()
     
 
