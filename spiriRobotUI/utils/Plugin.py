@@ -102,6 +102,7 @@ class InstalledPlugin(Plugin):
         self.is_running = False
         self.base_stats = {"cores": 0, "memory": 0, "disk": 0}
         self.current_stats = {"status": "stopped", "cpu": 0.0, "memory": 0.0, "disk": 0.0}
+        self.container = None
 
     def run(self):
         print(f"Running {self.name}...")
@@ -137,16 +138,18 @@ class InstalledPlugin(Plugin):
             print(f"Error: {self.name} is running. Please stop it before uninstalling.")
         else:
             super().uninstall()
-            self.delete_plugin()
 
     def get_logs(self):
         if self.is_running:
             print(f"Fetching logs for {self.name}")
             try:
                 client = docker.from_env()
-                container = client.containers.get(self.folder_name)
-                logs = container.logs().decode('utf-8')
-                print(logs)
+                containers = client.containers.list(all=True)
+                for container in containers:
+                    if self.folder_name in container.name:
+                        self.container = container
+                logs = self.container.logs().decode('utf-8')
+                return logs
             except docker.errors.NotFound:
                 print(f"Error: Container '{self.folder_name}' not found.")
             except docker.errors.APIError as e:
@@ -155,27 +158,6 @@ class InstalledPlugin(Plugin):
                 print(f"An unexpected error occurred: {e}")
         else:
             print(f"Error: {self.name} is not running. Cannot fetch logs.")
-
-    def download_logs(self):
-        if self.is_running:
-            print(f"Downloading logs for {self.name}")
-            try:
-                client = docker.from_env()
-                container = client.containers.get(self.folder_name)
-                logs = container.logs().decode('utf-8')
-
-                with open(f"{self.folder_name}_logs.txt", 'w') as f:
-                    f.write(logs)
-                print(f"Logs for container '{self.folder_name}' saved to '{self.folder_name}_logs.txt'")
-
-            except docker.errors.NotFound:
-                print(f"Error: Container '{self.folder_name}' not found.")
-            except docker.errors.APIError as e:
-                print(f"Error interacting with Docker API: {e}")
-            except Exception as e:
-                print(f"An unexpected error occurred: {e}")
-            else:
-                print(f"Error: {self.name} is not enabled. Cannot download logs.")
     
     def update(self):
         if self.is_installed:
@@ -209,7 +191,7 @@ class InstalledPlugin(Plugin):
         else:
             print(f"Error: Docker Compose file not found at {compose_file_path}")
             
-    def configure(self, config: dict):
+    def edit_env(self, config: dict):
         print(f"Configuring {self.name} with provided settings")
 
     def get_base_stats(self):
@@ -229,6 +211,5 @@ class InstalledPlugin(Plugin):
         disk = 0.0  # fetch current disk usage here
         self.current_stats["status"] = status
         self.current_stats["cpu"] = cpu 
-
-        def delete_plugin(self):
-            print(f"Deleting {self.name} plugin")
+        self.current_stats["memory"] = memory
+        self.current_stats["disk"] = disk
