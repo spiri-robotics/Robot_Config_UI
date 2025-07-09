@@ -9,6 +9,7 @@ from spiriRobotUI.utils.EventBus import event_bus
 from loguru import logger
 import time
 import asyncio
+import os
 
 SERVICES = Path("/services/")
 
@@ -103,14 +104,25 @@ plugins = {
     )
 }
 
+os.iterdir
+    if plugin.repo 
+
 class InstalledPlugin(Plugin):
 
     def __init__(self, name, logo, repo, folder_name):
         super().__init__(name, logo, repo, folder_name)
         self.is_installed = True
-        self.is_running = False
-        self.current_stats = {"status": "stopped", "cpu": 0.0, "memory": 0.0, "disk": 0.0}
         self.container = None
+        client = docker.from_env()
+        containers = client.containers.list(all=True)
+        for container in containers:
+            if self.folder_name in container.name:
+                self.container = container
+        if self.container.status == "running":
+            self.is_running = True
+        else: 
+            self.is_running = False
+        self.current_stats = {"status": "stopped", "cpu": 0.0, "memory": 0.0, "disk": 0.0}
 
     async def run(self):
         print(f"Running {self.name}...")
