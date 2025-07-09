@@ -43,8 +43,7 @@ async def main_ui():
         with ui.tab_panel(one):
             browser_grid_ui()
         with ui.tab_panel(two):
-            
-                installed_grid_ui()
+            await installed_grid_ui()
 
 @ui.refreshable   
 def browser_grid_ui():
@@ -53,7 +52,7 @@ def browser_grid_ui():
             card.render()
 
 @ui.refreshable
-def installed_grid_ui():
+async def installed_grid_ui():
     if len(installed_plugins) == 0:
         ui.label(
             "No plugins installed yet. Please visit the 'Available' tab to install plugins."
@@ -61,7 +60,7 @@ def installed_grid_ui():
     else:
         with ui.grid().classes("grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4"):
             for card in installed_cards.values():
-                card.render()
+                await card.render()
 
 def on_plugin_installed(plugin_name: str):
     plugin = installed_plugins[plugin_name]
