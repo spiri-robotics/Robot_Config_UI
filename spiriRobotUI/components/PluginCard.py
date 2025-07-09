@@ -4,6 +4,8 @@ from spiriRobotUI.components.PluginDialog import PluginDialog
 from spiriRobotUI.components.ToggleButton import ToggleButton
 from spiriRobotUI.utils.Plugin import InstalledPlugin, Plugin, plugins, installed_plugins
 from spiriRobotUI.utils.styles import DARK_MODE
+from spiriRobotUI.utils.system_utils import cores, memory, disk 
+import asyncio
 
 
 class PluginBrowserCard:
@@ -48,9 +50,8 @@ class PluginInstalledCard:
         self.base_card_classes = ""
         self.plugin = plugin
 
-    def render(self):
+    async def render(self):
         self.plugin.get_current_stats()
-        self.plugin.get_base_stats()
         installed_card = ui.card().classes(f"{self.base_card_classes}")
         if DARK_MODE:
             installed_card.classes(f"dark-card")
@@ -60,8 +61,8 @@ class PluginInstalledCard:
                 self.enable_toggle = ToggleButton(
                     on_label="Enable and Start",
                     off_label="Disable",
-                    on_switch=lambda: self.plugin.run(),
-                    off_switch=lambda: self.plugin.stop(),
+                    on_switch=self.plugin.run,
+                    off_switch=self.plugin.stop,
                     state=not self.plugin.is_running,
                     on_color="secondary",
                     off_color="warning",
@@ -69,7 +70,7 @@ class PluginInstalledCard:
             ui.label(self.plugin.name.upper()).classes("text-lg font-bold")
             ui.label(self.plugin.repo)
             ui.separator()
-            if not self.plugin.is_running:
+            if self.plugin.is_running:
                 with ui.grid(columns=2).classes("w-full text-xl"):
                     ui.markdown("**Status:**")
                     ui.markdown().bind_content_from(
@@ -78,19 +79,14 @@ class PluginInstalledCard:
                 ui.separator()
                 with ui.grid(columns=2).classes("w-full text-xl"):
                     ui.markdown("CPU usage: ")
-                    cpu_progress = ui.linear_progress().bind_value_from(
-                        self.plugin.current_stats["cpu"]
-                    )
-
+                    cpu_progress = ui.linear_progress().bind_value_from(lambda: self.plugin.current_stats["cpu"])
                     ui.markdown("Memory usage: ")
                     memory_progress = ui.linear_progress().bind_value_from(
-                        self.plugin.current_stats["memory"]
-                        / self.plugin.base_stats["memory"]
+                        lambda: self.plugin.current_stats["memory"] / self.plugin.current_stats["memory_limit"]
                     )
-
                     ui.markdown("Disk usage: ")
                     disk_progress = ui.linear_progress().bind_value_from(
-                        self.plugin.current_stats["disk"] / self.plugin.base_stats["disk"]
+                        lambda: self.plugin.current_stats["disk"] / disk
                     )
                 ui.separator()
                 with ui.row():
@@ -98,6 +94,7 @@ class PluginInstalledCard:
                     ui.button("VIEW LOGS", color='secondary', on_click=lambda: self.get_logs())
                     ui.button("EDIT", color='secondary', on_click=lambda: self.edit_env())
                     ui.button("RESTART", color='secondary', on_click=lambda: self.restart_plugin())
+                    ui.button("UPDATE", color='secondary', on_click=lambda: self.plugin.update())
                     
     def uninstall_plugin(self):
         self.plugin.uninstall()
@@ -105,16 +102,31 @@ class PluginInstalledCard:
     def get_logs(self):
         logs = self.plugin.get_logs()
         with ui.dialog() as dialog:
-            ui.label("Plugin Logs").classes("text-lg font-bold")
-            ui.textarea(logs).classes("w-full h-64").props("readonly")
-            with ui.row().classes("justify-end"):
-                ui.button("Download Logs", color='secondary', on_click=lambda: ui.download.content(logs, f"{self.plugin.name}_logs.txt"))
-                ui.button("Close", color='secondary', on_click=dialog.close)
+            with ui.card():
+                ui.label("Plugin Logs").classes("text-lg font-bold")
+                ui.textarea(logs).classes("w-full h-64").props("readonly")
+                with ui.row().classes("justify-end"):
+                    ui.button('', icon='download', on_click=lambda: ui.download.file('logs.txt'), color='secondary')
+                    ui.button("Close", color='secondary', on_click=dialog.close)
+        dialog.classes("w-3/4 h-3/4")
+        dialog.props("scrollable")
         dialog.open()
 
     def edit_env(self):
-        self.plugin.edit_env()
+        env = self.plugin.get_env()
+        with ui.dialog() as dialog:
+            with ui.card().classes("w-3/4 h-3/4"):
+                ui.label("Edit Environment Variables").classes("text-lg font-bold")
+                code = ui.codemirror(env, language='json').classes("w-full h-64")
+                code.props(
+                    'mode="application/json" line-numbers theme="default" readonly=false tab-size=2 auto-close-brackets match-brackets line-wrapping'
+                )
+                with ui.row().classes("justify-end"):
+                    ui.button("Save", color='secondary', on_click=lambda: self.plugin.set_env(code.value))
+                    ui.button("Close", color='secondary', on_click=dialog.close)
+        dialog.open()
 
-    def restart_plugin(self):
-        self.plugin.stop()
-        self.plugin.run()
+    async def restart_plugin(self):
+        await self.plugin.stop()
+        print(self.plugin.is_running)
+        await self.plugin.run()

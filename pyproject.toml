@@ -7,5 +7,7 @@ requires-python = ">=3.11"
 dependencies = [
     "docker>=7.1.0",
     "gitpython>=3.1.44",
+    "loguru>=0.7.3",
     "nicegui>=2.20.0",
+    "psutil>=7.0.0",
 ]
