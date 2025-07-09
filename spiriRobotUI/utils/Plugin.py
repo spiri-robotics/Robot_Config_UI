@@ -273,7 +273,6 @@ class InstalledPlugin(Plugin):
             return
         try:
             stats = self.container.stats(stream=False)
-            # CPU calculation (simplified)
             cpu_delta = stats["cpu_stats"]["cpu_usage"]["total_usage"] - stats["precpu_stats"]["cpu_usage"]["total_usage"]
             system_delta = stats["cpu_stats"]["system_cpu_usage"] - stats["precpu_stats"]["system_cpu_usage"]
             cpu_percent = 0.0
