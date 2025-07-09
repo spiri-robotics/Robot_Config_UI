@@ -2,10 +2,12 @@ from nicegui import ui
 from spiriRobotUI.utils.styles import styles
 from spiriRobotUI.components.Sidebar import sidebar
 from spiriRobotUI.components.Header import header
+import speedtest
+import asyncio
 
 @ui.page("/network")
 async def network_ui():
-    styles()
+    await styles()
     sidebar()
     header()
 
@@ -28,19 +30,60 @@ async def network_ui():
                     ui.icon('timer').classes('text-white')
                     latency_label = ui.label('... ms')
 
-            # Graph area
-            with ui.card().classes('bg-gray-800 w-full'):
-                ui.label('Speed (Mbps)').classes('text-white')
-                chart = ui.line_chart({'x': [], 'y': []}).classes('h-48 w-full')
+            chart = ui.echart({
+                'xAxis': {'type': 'category', 'data': []},
+                'yAxis': {'type': 'value'},
+                'series': [{
+                    'data': [],
+                    'type': 'line'
+                }]
+            }).classes('h-64 w-full')
 
-            # Start Button
+            
+            def run_speedtest():
+                st = speedtest.Speedtest()
+                st.get_servers([])
+                best = st.get_best_server()
+                st.download()
+                st.upload()
+                return {
+                    'latency': best['latency'],
+                    'download': st.results.download / 1_000_000,
+                    'upload': st.results.upload / 1_000_000,
+                }
+
             async def start_test():
-                # Replace this logic with real test integration
-                circular.set_value(42)
-                download_label.text = "95.4 Mbps"
-                upload_label.text = "35.2 Mbps"
-                latency_label.text = "12 ms"
-                chart.update({'x': list(range(10)), 'y': [i * 10 for i in range(10)]})
+                circular.set_value(0)
+                download_label.text = "... Mbps"
+                upload_label.text = "... Mbps"
+                latency_label.text = "... ms"
+                chart.options['xAxis']['data'] = []
+                chart.options['series'][0]['data'] = []
+                chart.update()
+
+                latency_label.text = "Finding server..."
+                await asyncio.sleep(0.5)
+
+                results = await asyncio.to_thread(run_speedtest)
+
+                latency_label.text = f"{results['latency']:.0f} ms"
+                download_label.text = "Testing download..."
+                upload_label.text = "Testing upload..."
+
+                speeds = []
+                x_data = []
+                for i in range(1, 11):
+                    partial_speed = min(results['download'], i * (results['download'] / 10))
+                    speeds.append(round(partial_speed, 1))
+                    x_data.append(f"{i * 0.5:.1f}s")
+                    circular.set_value(partial_speed / 100)
+                    chart.options['xAxis']['data'] = x_data
+                    chart.options['series'][0]['data'] = speeds
+                    chart.update()
+                    await asyncio.sleep(0.3)
+
+                download_label.text = f"{results['download']:.1f} Mbps"
+                upload_label.text = f"{results['upload']:.1f} Mbps"
 
             ui.button(icon='play_arrow', on_click=start_test).classes('mt-4')
 
