@@ -6,7 +6,7 @@ def test() -> None:
 
 def sidebar() -> None:
     """Render the sidebar."""
-    with ui.left_drawer(value=True, top_corner=True, bottom_corner=True).classes('bg-white text-black'):
+    with ui.left_drawer(value=True, top_corner=True, bottom_corner=True).classes('bg-white text-black').props('behavior=desktop'):
         with ui.column().classes('p-4'):
             with ui.row().classes('items-center justify-between pb-[--nicegui-default-padding]'):
                 ui.image("spiriRobotUI/icons/spiri_drone_ui_logo.svg").classes('h-12 w-12')
