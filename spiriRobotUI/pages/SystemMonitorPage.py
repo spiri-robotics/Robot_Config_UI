@@ -18,9 +18,9 @@ async def system_ui():
     
     with ui.tabs().classes('w-full') as tabs:
         system_tab = ui.tab('SYSTEM MONITOR')
-        processes_tab = ui.tab('PROCESSES').on('click', lambda: ui.open('/processes')).classes('bg-blue-600 text-white')
-        network_tab = ui.tab('NETWORK').on('click', lambda: ui.open('/network'))
-        about_tab = ui.tab('ABOUT').on('click', lambda: ui.open('/about'))
+        processes_tab = ui.tab('PROCESSES')
+        network_tab = ui.tab('NETWORK')
+        about_tab = ui.tab('ABOUT')
 
     with ui.tab_panels(tabs, value=system_tab).classes('w-full'):
         with ui.tab_panel(system_tab):
@@ -77,14 +77,11 @@ async def system_ui():
                     except Exception as e:
                         ui.label("Temperature sensors unavailable").classes('text-xs')
 
-    with ui.tab_panels(tabs, value=processes_tab).classes('w-full'):
         with ui.tab_panel(processes_tab):
             ui.markdown("## 🖥️ Processes")
 
-    with ui.tab_panels(tabs, value=network_tab).classes('w-full'):
         with ui.tab_panel(network_tab):
             ui.markdown("## 🖥️ Network")
 
-    with ui.tab_panels(tabs, value=about_tab).classes('w-full'):
         with ui.tab_panel(about_tab):
             ui.markdown("## 🖥️ About")
