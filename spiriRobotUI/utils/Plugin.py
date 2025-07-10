@@ -115,7 +115,7 @@ class InstalledPlugin(Plugin):
         for container in containers:
             if self.folder_name in container.name:
                 self.container = container
-        if self.container.status == "running":
+        if self.container and self.container.status == "running":
             self.is_running = True
         else: 
             self.is_running = False

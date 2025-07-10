@@ -68,7 +68,8 @@ def on_plugin_installed(plugin_name: str):
     installed_grid_ui.refresh()
 
 def on_plugin_uninstalled(plugin_name: str):
-    del installed_cards[plugin_name]
+    if plugin_name in installed_cards.keys():
+        del installed_cards[plugin_name]
     browser_cards[plugin_name].render.refresh()
     installed_grid_ui.refresh()
     
