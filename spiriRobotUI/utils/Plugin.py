@@ -9,6 +9,7 @@ from spiriRobotUI.utils.EventBus import event_bus
 from loguru import logger
 import time
 import asyncio
+import os
 
 SERVICES = Path("/services/")
 
@@ -115,9 +116,17 @@ class InstalledPlugin(Plugin):
     def __init__(self, name, logo, repo, folder_name):
         super().__init__(name, logo, repo, folder_name)
         self.is_installed = True
-        self.is_running = False
-        self.current_stats = {"status": "stopped", "cpu": 0.0, "memory": 0.0, "disk": 0.0}
         self.container = None
+        client = docker.from_env()
+        containers = client.containers.list(all=True)
+        for container in containers:
+            if self.folder_name in container.name:
+                self.container = container
+        if self.container and self.container.status == "running":
+            self.is_running = True
+        else: 
+            self.is_running = False
+        self.current_stats = {"status": "stopped", "cpu": 0.0, "memory": 0.0, "disk": 0.0}
 
     async def run(self):
         print(f"Running {self.name}...")
@@ -147,6 +156,7 @@ class InstalledPlugin(Plugin):
                 print("Error: Docker Compose not found. Please ensure Docker is installed and running.")
                 return
             self.is_running = True
+            event_bus.emit("plugin_run", self.name)
             print(f"{self.name} is running")
         else:
             print(f"Error: {self.name} is already running")
@@ -178,6 +188,7 @@ class InstalledPlugin(Plugin):
 
             self.is_running = False
             self.container = None
+            event_bus.emit("plugin_run", self.name)
             print(f"{self.name} stopped")
         else:
             print(f"Error: {self.name} is not running")
@@ -280,7 +291,6 @@ class InstalledPlugin(Plugin):
             return
         try:
             stats = self.container.stats(stream=False)
-            # CPU calculation (simplified)
             cpu_delta = stats["cpu_stats"]["cpu_usage"]["total_usage"] - stats["precpu_stats"]["cpu_usage"]["total_usage"]
             system_delta = stats["cpu_stats"]["system_cpu_usage"] - stats["precpu_stats"]["system_cpu_usage"]
             cpu_percent = 0.0
@@ -298,3 +308,16 @@ class InstalledPlugin(Plugin):
         while self.is_running:
             self.get_current_stats()
             await asyncio.sleep(1)
+
+# Scan the SERVICES directory and register installed plugins.
+for service_dir in SERVICES.iterdir():
+    if service_dir.is_dir():
+        for plugin in plugins.values():
+            if service_dir.name == plugin.folder_name and plugin.name not in installed_plugins:
+                plugin.is_installed = True
+                installed_plugins[plugin.name] = InstalledPlugin(
+                    plugin.name,
+                    plugin.logo,
+                    plugin.repo,
+                    plugin.folder_name
+                )

@@ -49,6 +49,7 @@ class PluginInstalledCard:
         self.base_card_classes = ""
         self.plugin = plugin
 
+    @ui.refreshable
     async def render(self):
         self.plugin.get_current_stats()
         

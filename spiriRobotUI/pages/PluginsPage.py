@@ -3,25 +3,28 @@ from nicegui import ui
 from spiriRobotUI.components.Header import header
 from spiriRobotUI.components.PluginCard import PluginBrowserCard, PluginInstalledCard
 from spiriRobotUI.components.Sidebar import sidebar
-from spiriRobotUI.utils.Plugin import InstalledPlugin, Plugin, plugins, installed_plugins
+from spiriRobotUI.utils.Plugin import plugins, installed_plugins
 from spiriRobotUI.utils.plugin_utils import load_plugins
 from spiriRobotUI.utils.EventBus import event_bus
 from spiriRobotUI.utils.styles import styles, style_vars
-
+from spiriRobotUI.utils.repo_utils import display_repos
 
 browser_cards = {}
 installed_cards = {}
+
 
 def create_browser_cards():
     for plugin in plugins.values():
         if plugin.name not in browser_cards.keys():
             browser_cards[plugin.name] = PluginBrowserCard(plugin)
-            
+
+
 def update_installed_cards():
     for plugin in installed_plugins.values():
         if plugin.name not in installed_cards.keys():
             installed_cards[plugin.name] = PluginInstalledCard(plugin)
-               
+
+
 @ui.page("/")
 async def main_ui():
     await styles()
@@ -44,15 +47,13 @@ async def main_ui():
             browser_grid_ui()
         with ui.tab_panel(two):
             await installed_grid_ui()
-            a = InstalledPlugin('test', 'spiriRobotUI/icons/spiri_drone_ui_logo.svg', 'robot-config-test-repo', 'webapp-example')
-            b = PluginInstalledCard(a)
-            await b.render()
 
 @ui.refreshable   
 def browser_grid_ui():
     with ui.row(align_items='stretch').classes(f"w-full"):
         for card in browser_cards.values():
             card.render()
+
 
 @ui.refreshable
 async def installed_grid_ui():
@@ -65,17 +66,26 @@ async def installed_grid_ui():
             for card in installed_cards.values():
                 await card.render()
 
+
 def on_plugin_installed(plugin_name: str):
     plugin = installed_plugins[plugin_name]
     installed_cards[plugin.name] = PluginInstalledCard(plugin)
     browser_cards[plugin_name].render.refresh()
     installed_grid_ui.refresh()
 
+
 def on_plugin_uninstalled(plugin_name: str):
-    del installed_cards[plugin_name]
+    if plugin_name in installed_cards.keys():
+        del installed_cards[plugin_name]
     browser_cards[plugin_name].render.refresh()
     installed_grid_ui.refresh()
-    
+
+
+def on_plugin_run(plugin_name: str):
+    installed_cards[plugin_name].render.refresh()
+
 
 event_bus.on("plugin_installed", on_plugin_installed)
 event_bus.on("plugin_uninstalled", on_plugin_uninstalled)
+
+event_bus.on("plugin_run", on_plugin_run)
