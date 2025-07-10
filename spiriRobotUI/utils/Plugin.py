@@ -305,6 +305,7 @@ for service_dir in SERVICES.iterdir():
     if service_dir.is_dir():
         for plugin in plugins.values():
             if service_dir.name == plugin.folder_name and plugin.name not in installed_plugins:
+                plugin.is_installed = True
                 installed_plugins[plugin.name] = InstalledPlugin(
                     plugin.name,
                     plugin.logo,
