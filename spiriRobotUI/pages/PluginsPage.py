@@ -20,6 +20,29 @@ def update_installed_cards():
     for plugin in installed_plugins.values():
         if plugin.name not in installed_cards.keys():
             installed_cards[plugin.name] = PluginInstalledCard(plugin)
+
+_installed_repos = [
+    {'name': 'Main Plugins', 'url': 'https://github.com/myorg/main-plugins', 'plugins': ['Plugin A', 'Plugin B']},
+    {'name': 'Third Party', 'url': 'https://github.com/otheruser/plugins', 'plugins': ['Plugin X']}
+]
+
+def get_installed_repos():
+    return _installed_repos
+
+def add_repository(url: str):
+    # Parse name or validate URL here if needed
+    _installed_repos.append({'name': url.split('/')[-1], 'url': url, 'plugins': []})
+    ui.notify(f"Added repo: {url}")
+    ui.open('/')  # Refresh the page (or make this dynamic)
+
+def remove_repository(repo):
+    _installed_repos.remove(repo)
+    ui.notify(f"Removed: {repo['name']}")
+    ui.open('/')
+
+def inspect_repository(repo):
+    ui.notify(f"Inspecting: {repo['name']}")
+    # You can open a new page or modal here
                
 @ui.page("/")
 async def main_ui():
@@ -43,6 +66,30 @@ async def main_ui():
             browser_grid_ui()
         with ui.tab_panel(two):
             await installed_grid_ui()
+
+    with ui.card().classes('w-full bg-gray-900 text-white mt-4'):
+        ui.label("Installed Repositories").classes("text-lg font-bold")
+
+        # Add repo form
+        with ui.row().classes("items-center gap-4 mt-2"):
+            new_repo_input = ui.input("Git Repo URL").classes("w-1/2")
+            ui.button("Add Repository", on_click=lambda: add_repository(new_repo_input.value))
+
+        ui.separator()
+
+        # List installed repos
+        for repo in get_installed_repos():
+            with ui.expansion(f"{repo['name']}").classes("bg-gray-800 rounded-lg my-2"):
+                ui.label(f"URL: {repo['url']}").classes("text-sm text-gray-400")
+
+                # List plugins
+                with ui.column().classes("pl-4"):
+                    for plugin in repo.get('plugins', []):
+                        ui.label(f"• {plugin}").classes("text-sm")
+
+                with ui.row().classes("justify-end mt-2"):
+                    ui.button("Remove", on_click=lambda r=repo: remove_repository(r)).props('color=red')
+                    ui.button("Inspect", on_click=lambda r=repo: inspect_repository(r)).props('color=primary')
 
 @ui.refreshable   
 def browser_grid_ui():
