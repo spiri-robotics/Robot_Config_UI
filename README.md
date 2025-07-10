@@ -4,7 +4,7 @@ This is a lightweight GUI designed to be run on a robot and allow simple plugin 
 
 ## How to run (for developers)
 
-make sure to run this in a terminal: 
+Make sure to run this in a terminal: 
 ```
 sudo mkdir /services 
 sudo chown vscode /services
