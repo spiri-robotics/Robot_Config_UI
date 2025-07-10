@@ -140,6 +140,7 @@ class InstalledPlugin(Plugin):
                 print("Error: Docker Compose not found. Please ensure Docker is installed and running.")
                 return
             self.is_running = True
+            event_bus.emit("plugin_run", self.name)
             print(f"{self.name} is running")
         else:
             print(f"Error: {self.name} is already running")
@@ -171,6 +172,7 @@ class InstalledPlugin(Plugin):
 
             self.is_running = False
             self.container = None
+            event_bus.emit("plugin_run", self.name)
             print(f"{self.name} stopped")
         else:
             print(f"Error: {self.name} is not running")
