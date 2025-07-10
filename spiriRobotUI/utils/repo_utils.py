@@ -4,6 +4,7 @@ from pathlib import Path
 import shutil
 
 from spiriRobotUI.settings import PROJECT_ROOT
+from spiriRobotUI.utils.Plugin import plugins
 
 installed_repos = []
 
@@ -66,6 +67,10 @@ def add_repository(url: str):
 
 
 def remove_repository(repo):
+    for plugin in plugins.keys():
+        if plugins[plugin].repo == repo["name"]:
+            plugins.pop(plugin)
+
     if repo in installed_repos:
         installed_repos.remove(repo)
 

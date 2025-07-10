@@ -9,7 +9,6 @@ from spiriRobotUI.utils.EventBus import event_bus
 from loguru import logger
 import time
 import asyncio
-import os
 
 SERVICES = Path("/services/")
 

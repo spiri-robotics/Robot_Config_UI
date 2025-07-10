@@ -2,14 +2,9 @@ from nicegui import ui
 
 from spiriRobotUI.components.PluginDialog import PluginDialog
 from spiriRobotUI.components.ToggleButton import ToggleButton
-from spiriRobotUI.utils.Plugin import (
-    InstalledPlugin,
-    Plugin,
-    plugins,
-    installed_plugins,
-)
+from spiriRobotUI.utils.Plugin import InstalledPlugin, Plugin
 from spiriRobotUI.utils.styles import DARK_MODE
-from spiriRobotUI.utils.system_utils import cores, memory, disk
+from spiriRobotUI.utils.system_utils import disk
 
 
 class PluginBrowserCard:
