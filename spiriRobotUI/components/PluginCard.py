@@ -5,8 +5,6 @@ from spiriRobotUI.components.ToggleButton import ToggleButton
 from spiriRobotUI.utils.Plugin import InstalledPlugin, Plugin, plugins, installed_plugins
 from spiriRobotUI.utils.styles import DARK_MODE
 from spiriRobotUI.utils.system_utils import cores, memory, disk 
-import asyncio
-
 
 class PluginBrowserCard:
     def __init__(self, plugin: Plugin):
