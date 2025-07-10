@@ -2,9 +2,15 @@ from nicegui import ui
 
 from spiriRobotUI.components.PluginDialog import PluginDialog
 from spiriRobotUI.components.ToggleButton import ToggleButton
-from spiriRobotUI.utils.Plugin import InstalledPlugin, Plugin, plugins, installed_plugins
+from spiriRobotUI.utils.Plugin import (
+    InstalledPlugin,
+    Plugin,
+    plugins,
+    installed_plugins,
+)
 from spiriRobotUI.utils.styles import DARK_MODE
-from spiriRobotUI.utils.system_utils import cores, memory, disk 
+from spiriRobotUI.utils.system_utils import cores, memory, disk
+
 
 class PluginBrowserCard:
     def __init__(self, plugin: Plugin):
@@ -20,11 +26,12 @@ class PluginBrowserCard:
         )
         if DARK_MODE:
             browser_card.classes(f"dark-card")
-            
+
         with browser_card:
-            card_image = ui.image(self.plugin.logo).classes(
-                "w-full h-48 object-cover cursor-pointer"
-            )
+            if self.plugin.logo:
+                card_image = ui.image(self.plugin.logo).classes(
+                    "w-full h-48 object-cover cursor-pointer"
+                )
             with ui.row().classes("items-center justify-between w-full"):
                 ui.label(self.plugin.name.upper()).classes("text-lg font-bold")
                 self.install_toggle = ToggleButton(
@@ -42,6 +49,7 @@ class PluginBrowserCard:
             self.plugin_dialog.dialog.open()
 
         card_image.on("click", open_dialog)
+
 
 class PluginInstalledCard:
     def __init__(self, plugin: InstalledPlugin):
@@ -78,10 +86,13 @@ class PluginInstalledCard:
                 ui.separator()
                 with ui.grid(columns=2).classes("w-full text-xl"):
                     ui.markdown("CPU usage: ")
-                    cpu_progress = ui.linear_progress().bind_value_from(lambda: self.plugin.current_stats["cpu"])
+                    cpu_progress = ui.linear_progress().bind_value_from(
+                        lambda: self.plugin.current_stats["cpu"]
+                    )
                     ui.markdown("Memory usage: ")
                     memory_progress = ui.linear_progress().bind_value_from(
-                        lambda: self.plugin.current_stats["memory"] / self.plugin.current_stats["memory_limit"]
+                        lambda: self.plugin.current_stats["memory"]
+                        / self.plugin.current_stats["memory_limit"]
                     )
                     ui.markdown("Disk usage: ")
                     disk_progress = ui.linear_progress().bind_value_from(
@@ -89,15 +100,31 @@ class PluginInstalledCard:
                     )
                 ui.separator()
                 with ui.row():
-                    ui.button("UNINSTALL", color='secondary', on_click=lambda: self.uninstall_plugin())
-                    ui.button("VIEW LOGS", color='secondary', on_click=lambda: self.get_logs())
-                    ui.button("EDIT", color='secondary', on_click=lambda: self.edit_env())
-                    ui.button("RESTART", color='secondary', on_click=lambda: self.restart_plugin())
-                    ui.button("UPDATE", color='secondary', on_click=lambda: self.plugin.update())
+                    ui.button(
+                        "UNINSTALL",
+                        color="secondary",
+                        on_click=lambda: self.uninstall_plugin(),
+                    )
+                    ui.button(
+                        "VIEW LOGS", color="secondary", on_click=lambda: self.get_logs()
+                    )
+                    ui.button(
+                        "EDIT", color="secondary", on_click=lambda: self.edit_env()
+                    )
+                    ui.button(
+                        "RESTART",
+                        color="secondary",
+                        on_click=lambda: self.restart_plugin(),
+                    )
+                    ui.button(
+                        "UPDATE",
+                        color="secondary",
+                        on_click=lambda: self.plugin.update(),
+                    )
 
     def uninstall_plugin(self):
         self.plugin.uninstall()
-    
+
     def get_logs(self):
         logs = self.plugin.get_logs()
         with ui.dialog() as dialog:
@@ -105,8 +132,13 @@ class PluginInstalledCard:
                 ui.label("Plugin Logs").classes("text-lg font-bold")
                 ui.textarea(logs).classes("w-full h-64").props("readonly")
                 with ui.row().classes("justify-end"):
-                    ui.button('', icon='download', on_click=lambda: ui.download.file('logs.txt'), color='secondary')
-                    ui.button("Close", color='secondary', on_click=dialog.close)
+                    ui.button(
+                        "",
+                        icon="download",
+                        on_click=lambda: ui.download.file("logs.txt"),
+                        color="secondary",
+                    )
+                    ui.button("Close", color="secondary", on_click=dialog.close)
         dialog.classes("w-3/4 h-3/4")
         dialog.props("scrollable")
         dialog.open()
@@ -116,13 +148,17 @@ class PluginInstalledCard:
         with ui.dialog() as dialog:
             with ui.card().classes("w-3/4 h-3/4"):
                 ui.label("Edit Environment Variables").classes("text-lg font-bold")
-                code = ui.codemirror(env, language='json').classes("w-full h-64")
+                code = ui.codemirror(env, language="json").classes("w-full h-64")
                 code.props(
                     'mode="application/json" line-numbers theme="default" readonly=false tab-size=2 auto-close-brackets match-brackets line-wrapping'
                 )
                 with ui.row().classes("justify-end"):
-                    ui.button("Save", color='secondary', on_click=lambda: self.plugin.set_env(code.value))
-                    ui.button("Close", color='secondary', on_click=dialog.close)
+                    ui.button(
+                        "Save",
+                        color="secondary",
+                        on_click=lambda: self.plugin.set_env(code.value),
+                    )
+                    ui.button("Close", color="secondary", on_click=dialog.close)
         dialog.open()
 
     async def restart_plugin(self):
