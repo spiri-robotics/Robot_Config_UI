@@ -73,11 +73,6 @@ def remove_repository(repo):
         ui.notify(f"Error deleting repo: {e}", type="negative")
 
 
-def inspect_repository(repo):
-    ui.notify(f"Inspecting: {repo['name']}")
-    # You can open a new page or modal here
-
-
 @ui.page("/")
 async def main_ui():
     await styles()
@@ -124,13 +119,9 @@ async def main_ui():
                     for plugin in repo.get("plugins", []):
                         ui.label(f"• {plugin}").classes("text-sm")
 
-                with ui.row().classes("justify-end mt-2"):
-                    ui.button(
-                        "Remove", on_click=lambda r=repo: remove_repository(r)
-                    ).props("color=red")
-                    ui.button(
-                        "Inspect", on_click=lambda r=repo: inspect_repository(r)
-                    ).props("color=secondary")
+                ui.button("Remove", on_click=lambda r=repo: remove_repository(r)).props(
+                    "color=red"
+                )
 
 
 @ui.refreshable
