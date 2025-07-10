@@ -1,7 +1,5 @@
 from nicegui import ui
 
-DARK_MODE = True
-
 async def styles():
 
     ui.colors(
@@ -14,39 +12,9 @@ async def styles():
         negative="#2c0e37",
         info="#586469",
         warning="#BF5234",
+        header = '#788391'
     )
-    ui.html(
-        """
-        <style>
-        @media (prefers-color-scheme: dark) {
-            .dark-card {
-                box-shadow: 0px 4px 12px rgba(0,0,0,0.8) !important;
-            }
-            .nicegui-markdown p,
-            .nicegui-markdown li {
-                font-size: 14px !important;
-                line-height: 1.3 !important;
-                margin-bottom: 4px !important;
-            }
-            .nicegui-markdown h1 {
-                font-size: 24px !important;
-                font-weight: bold !important;
-            }
-            .nicegui-markdown h2 {
-                font-size: 20px !important;
-                font-weight: bold !important;
-            }
-            .nicegui-markdown h3 {
-                font-size: 18px !important;
-                font-weight: bold !important;
-            }
-            .nicegui-markdown h4,
-            .nicegui-markdown h5,
-            .nicegui-markdown h6 {
-                font-size: 16px !important;
-                font-weight: bold !important;
-            }
-        }
-        </style>
-        """
-    )
+
+style_vars = {
+    'flex-shadow': '0px_1px_5px_rgba(0,0,0,0.2),_0px_2px_2px_rgba(0,0,0,0.14),_0px_3px_1px_-2px_rgba(0,0,0,0.12)'
+}

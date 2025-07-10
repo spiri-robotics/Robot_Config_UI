@@ -96,8 +96,15 @@ class Plugin:
         
 plugins = {
     "plugin1": Plugin(
-        "plugin1",
+        "example plugin",
         "spiriRobotUI/icons/cat_icon.jpg",
+        "robot-config-test-repo",
+        "webapp-example"
+    ),
+    
+    "plugin2": Plugin(
+        "another plugin",
+        "spiriRobotUI/icons/spiri_drone_ui_logo.svg",
         "robot-config-test-repo",
         "webapp-example"
     )

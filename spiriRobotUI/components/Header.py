@@ -2,6 +2,8 @@ from nicegui import ui
 
 def header() -> None:
     """Render the header."""
-    ui.button('', icon='account_circle').props('flat fab color=black').classes('absolute top-4 right-4 z-50')
-    ui.button('', icon='more_vert').props('flat fab color=black').classes('absolute top-4 right-16 z-50')
+    with ui.button('').props('flat fab').classes('absolute top-4 right-4 z-50'):
+        ui.icon('account_circle').classes('text-[#000000] dark:text-white')
+    with ui.button('').props('flat fab').classes('absolute top-4 right-16 z-50'):
+        ui.icon('more_vert').classes('text-[#000000] dark:text-white')
         

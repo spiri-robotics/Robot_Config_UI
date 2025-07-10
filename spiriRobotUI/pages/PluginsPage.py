@@ -6,7 +6,7 @@ from spiriRobotUI.components.Sidebar import sidebar
 from spiriRobotUI.utils.Plugin import InstalledPlugin, Plugin, plugins, installed_plugins
 from spiriRobotUI.utils.plugin_utils import load_plugins
 from spiriRobotUI.utils.EventBus import event_bus
-from spiriRobotUI.utils.styles import styles
+from spiriRobotUI.utils.styles import styles, style_vars
 
 
 browser_cards = {}
@@ -28,7 +28,7 @@ async def main_ui():
     sidebar()
     header()
     ui.markdown("## Plug-in Coordinator")
-    ui.label("Your favourite plugins, now all in one place.")
+    ui.label("Your favourite plugins, now all in one place.").classes('text-lg font-light')
 
     ui.separator()
 
@@ -39,15 +39,18 @@ async def main_ui():
     with ui.tabs().classes('w-full') as tabs:
         one = ui.tab('Available')
         two = ui.tab('Installed')
-    with ui.tab_panels(tabs, value=one).classes('w-full'):
+    with ui.tab_panels(tabs, value=two).classes('w-full bg-transparent').props('animated=false'):
         with ui.tab_panel(one):
             browser_grid_ui()
         with ui.tab_panel(two):
             await installed_grid_ui()
+            a = InstalledPlugin('test', 'spiriRobotUI/icons/spiri_drone_ui_logo.svg', 'robot-config-test-repo', 'webapp-example')
+            b = PluginInstalledCard(a)
+            await b.render()
 
 @ui.refreshable   
 def browser_grid_ui():
-    with ui.grid().classes("grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4"):
+    with ui.row(align_items='stretch').classes(f"w-full"):
         for card in browser_cards.values():
             card.render()
 
@@ -58,7 +61,7 @@ async def installed_grid_ui():
             "No plugins installed yet. Please visit the 'Available' tab to install plugins."
         )
     else:
-        with ui.grid().classes("grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4"):
+        with ui.row(align_items='stretch').classes("w-full"):
             for card in installed_cards.values():
                 await card.render()
 
