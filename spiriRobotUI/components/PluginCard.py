@@ -20,7 +20,7 @@ class PluginBrowserCard:
             f"transition transform hover:scale-105 hover:border-blue-500 {self.base_card_classes}"
         )
         if DARK_MODE:
-            browser_card.classes(f"dark-card")
+            browser_card.classes("dark-card")
 
         with browser_card:
             if self.plugin.logo:
