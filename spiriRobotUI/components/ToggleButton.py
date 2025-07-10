@@ -28,6 +28,7 @@ class ToggleButton(ui.button):
 
     async def toggle(self) -> None:
         result = False
+        self.props(add='loading')
         if self.state:
             if inspect.iscoroutinefunction(self.on_switch):
                 result = await self.on_switch()
@@ -38,8 +39,10 @@ class ToggleButton(ui.button):
                 result = await self.off_switch()
             else:
                 result = self.off_switch()
-        self.state = not self.state
-        self.update()
+        if (result != False):
+            self.state = not self.state
+            self.props(remove='loading')
+            self.update()
 
     def update(self) -> None:
         self.color = self.on_color if self.state else self.off_color
