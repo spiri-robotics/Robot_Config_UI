@@ -8,7 +8,6 @@ from spiriRobotUI.utils.plugin_utils import load_plugins
 from spiriRobotUI.utils.EventBus import event_bus
 from spiriRobotUI.utils.styles import styles
 
-
 browser_cards = {}
 installed_cards = {}
 
@@ -69,7 +68,8 @@ def on_plugin_installed(plugin_name: str):
     installed_grid_ui.refresh()
 
 def on_plugin_uninstalled(plugin_name: str):
-    del installed_cards[plugin_name]
+    if plugin_name in installed_cards.keys():
+        del installed_cards[plugin_name]
     browser_cards[plugin_name].render.refresh()
     installed_grid_ui.refresh()
 
@@ -77,7 +77,6 @@ def on_plugin_run(plugin_name: str):
     plugin = installed_plugins[plugin_name]
     installed_cards[plugin_name].render.refresh()
     
-
 event_bus.on("plugin_installed", on_plugin_installed)
 event_bus.on("plugin_uninstalled", on_plugin_uninstalled)
 
