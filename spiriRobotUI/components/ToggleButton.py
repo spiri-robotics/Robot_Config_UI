@@ -1,4 +1,5 @@
 from nicegui import ui
+import inspect
 
 class ToggleButton(ui.button):
     def __init__(
@@ -26,10 +27,17 @@ class ToggleButton(ui.button):
         self.on("click", self.toggle)
 
     async def toggle(self) -> None:
+        result = False
         if self.state:
-            self.on_switch()
+            if inspect.iscoroutinefunction(self.on_switch):
+                result = await self.on_switch()
+            else:
+                result = self.on_switch()
         elif not self.state:
-            self.off_switch()
+            if inspect.iscoroutinefunction(self.off_switch):
+                result = await self.off_switch()
+            else:
+                result = self.off_switch()
         self.state = not self.state
         self.update()
 
