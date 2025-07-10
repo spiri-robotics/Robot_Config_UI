@@ -60,7 +60,7 @@ def add_repository(url: str):
         Repo.clone_from(url, clone_path)
         if clone_path.exists():
             repo_plugins = []
-            for plugin in (PROJECT_ROOT / "repos" / repo.name / "services").iterdir():
+            for plugin in (PROJECT_ROOT / "repos" / repo_name / "services").iterdir():
                 repo_plugins.append(plugin.name)
             installed_repos.append({"name": repo_name, "plugins": repo_plugins})
             ui.notify(f"Cloned {repo_name} into /repos")
