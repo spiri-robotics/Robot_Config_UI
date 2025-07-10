@@ -104,9 +104,6 @@ plugins = {
     )
 }
 
-os.iterdir
-    if plugin.repo 
-
 class InstalledPlugin(Plugin):
 
     def __init__(self, name, logo, repo, folder_name):
@@ -302,3 +299,15 @@ class InstalledPlugin(Plugin):
         while self.is_running:
             self.get_current_stats()
             await asyncio.sleep(1)
+
+# Scan the SERVICES directory and register installed plugins.
+for service_dir in SERVICES.iterdir():
+    if service_dir.is_dir():
+        for plugin in plugins.values():
+            if service_dir.name == plugin.folder_name and plugin.name not in installed_plugins:
+                installed_plugins[plugin.name] = InstalledPlugin(
+                    plugin.name,
+                    plugin.logo,
+                    plugin.repo,
+                    plugin.folder_name
+                )
