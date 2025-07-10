@@ -94,9 +94,9 @@ class PluginInstalledCard:
                     ui.button("EDIT", color='secondary', on_click=lambda: self.edit_env())
                     ui.button("RESTART", color='secondary', on_click=lambda: self.restart_plugin())
                     ui.button("UPDATE", color='secondary', on_click=lambda: self.plugin.update())
-                    
+
     def uninstall_plugin(self):
-        self.plugin.uninstall()
+            self.plugin.uninstall()
     
     def get_logs(self):
         logs = self.plugin.get_logs()

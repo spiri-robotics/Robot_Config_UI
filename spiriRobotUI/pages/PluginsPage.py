@@ -73,8 +73,7 @@ def on_plugin_uninstalled(plugin_name: str):
     browser_cards[plugin_name].render.refresh()
     installed_grid_ui.refresh()
 
-def on_plugin_run(plugin_name: str):
-    plugin = installed_plugins[plugin_name]
+def on_plugin_run(plugin_name: str): 
     installed_cards[plugin_name].render.refresh()
     
 event_bus.on("plugin_installed", on_plugin_installed)
