@@ -94,12 +94,12 @@ class Plugin:
 plugins = {}
 
 for repo in (PROJECT_ROOT / "repos").iterdir():
-    for plugin in PROJECT_ROOT / "repos" / repo.name / "services":
+    for plugin in (PROJECT_ROOT / "repos" / repo.name / "services").iterdir():
         logo = (
             PROJECT_ROOT / "repos" / repo.name / "services" / plugin.name / "logo.jpg"
         )
         if not logo.exists():
-            logo = None
+            logo = "spiriRobotUI/icons/cat_icon.jpg"
         plugins[plugin.name] = Plugin(plugin.name, str(logo), repo.name, plugin.name)
 
 
