@@ -33,14 +33,13 @@ class ToggleButton(ui.button):
                 result = await self.on_switch()
             else:
                 result = self.on_switch()
-        else:
+        elif not self.state:
             if inspect.iscoroutinefunction(self.off_switch):
                 result = await self.off_switch()
             else:
                 result = self.off_switch()
-        if result:
-            self.state = not self.state
-            self.update()
+        self.state = not self.state
+        self.update()
 
     def update(self) -> None:
         self.color = self.on_color if self.state else self.off_color
