@@ -108,11 +108,7 @@ class InstalledPlugin(Plugin):
         super().__init__(name, logo, repo, folder_name)
         self.is_installed = True
         self.containers = []
-        client = docker.from_env()
-        containers = client.containers.list(all=True)
-        for container in containers:
-            if self.folder_name in container.name:
-                self.containers.append(container)
+        self.get_containers()
         if len(self.containers) > 0:
             self.is_running = True
         else:
@@ -123,6 +119,14 @@ class InstalledPlugin(Plugin):
             "memory": 0.0,
             "disk": 0.0,
         }
+
+    def get_containers(self):
+        self.containers.clear()
+        client = docker.from_env()
+        containers = client.containers.list(all=True)
+        for container in containers:
+            if self.folder_name in container.name:
+                self.containers.append(container)
 
     async def run(self):
         print(f"Running {self.name}...")
@@ -135,13 +139,7 @@ class InstalledPlugin(Plugin):
                     stderr=subprocess.PIPE,
                 )
                 await asyncio.sleep(2)
-                # Find and assign the new container
-                self.containers.clear()  # Clear previous containers
-                client = docker.from_env()
-                containers = client.containers.list(all=True)
-                for container in containers:
-                    if self.folder_name in container.name:
-                        self.containers.append(container)
+                self.get_containers()
                 if len(self.containers) == 0:
                     print(f"No running containers found for {self.folder_name}")
             except subprocess.CalledProcessError as e:
@@ -186,7 +184,7 @@ class InstalledPlugin(Plugin):
                 logger.debug(f"Waiting for container to stop... {status}")
 
             self.is_running = False
-            self.container = None
+            self.containers = []
             event_bus.emit("plugin_run", self.name)
             print(f"{self.name} stopped")
         else:
@@ -204,12 +202,7 @@ class InstalledPlugin(Plugin):
         if self.is_running:
             print(f"Fetching logs for {self.name}")
             try:
-                self.containers.clear()  # Clear previous containers
-                client = docker.from_env()
-                containers = client.containers.list(all=True)
-                for container in containers:
-                    if self.folder_name in container.name:
-                        self.containers.append(container)
+                self.get_containers()
                 logs_list = {}
                 for i in range(0, len(self.containers)):
                     logs = self.containers[i].logs().decode("utf-8")
@@ -298,12 +291,7 @@ class InstalledPlugin(Plugin):
         if not self.is_running:
             print(f"{self.name} is not running. Cannot fetch stats.")
             return
-        self.containers = []
-        client = docker.from_env()
-        containers = client.containers.list(all=True)
-        for container in containers:
-            if self.folder_name in container.name:
-                self.containers.append(container)
+        self.get_containers()
         if len(self.containers) == 0:
             print(f"No running container found for {self.folder_name}")
             return
