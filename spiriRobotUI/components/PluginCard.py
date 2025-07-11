@@ -121,18 +121,27 @@ class PluginInstalledCard:
         self.plugin.uninstall()
 
     def get_logs(self):
-        logs = self.plugin.get_logs()
+        logs_list = self.plugin.get_logs()
+        if len(logs_list) == 0:
+            ui.notify("No logs available for this plugin.")
+            return
         with ui.dialog() as dialog:
             with ui.card():
-                ui.label("Plugin Logs").classes("text-lg font-bold")
-                ui.textarea(logs).classes("w-full h-64").props("readonly")
+                tab_names = list(logs_list.keys())
+                with ui.tabs() as tabs:
+                    for name in tab_names:
+                        ui.tab(name)
+                with ui.tab_panels(tabs, value=tab_names[0]) as panels:
+                    for name in tab_names:
+                        with ui.tab_panel(name):
+                            ui.textarea(logs_list[name]).classes("w-full h-64").props("readonly")
+                            ui.button(
+                                "Download",
+                                icon="download",
+                                color="secondary",
+                                on_click=lambda n=name: ui.download.text(logs_list[n], filename=f"{n}.txt"),
+                            )
                 with ui.row().classes("justify-end"):
-                    ui.button(
-                        "",
-                        icon="download",
-                        on_click=lambda: ui.download.file("logs.txt"),
-                        color="secondary",
-                    )
                     ui.button("Close", color="secondary", on_click=dialog.close)
         dialog.classes("w-3/4 h-3/4")
         dialog.props("scrollable")

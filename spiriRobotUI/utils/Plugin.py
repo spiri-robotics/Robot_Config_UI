@@ -213,8 +213,10 @@ class InstalledPlugin(Plugin):
                 logs_list = {}
                 for i in range(0, len(self.containers)):
                     logs = self.containers[i].logs().decode("utf-8")
-                    log_file_path = Path(PROJECT_ROOT) / 'logs' / f"{self.containers[i].name}.txt"
-                    with open(log_file_path, "a") as log_file:
+                    log_dir = Path(PROJECT_ROOT) / 'logs'
+                    log_dir.mkdir(parents=True, exist_ok=True)  # Ensure logs directory exists
+                    log_file_path = log_dir / f"{self.containers[i].name}.txt"
+                    with open(log_file_path, "w") as log_file:
                         log_file.write(f"\n--- Logs for {self.containers[i].name} ---\n")
                         log_file.write(logs)
                         log_file.write("\n")
@@ -222,12 +224,16 @@ class InstalledPlugin(Plugin):
                 return logs_list
             except docker.errors.NotFound:
                 print(f"Error: Container '{self.folder_name}' not found.")
+                return {}
             except docker.errors.APIError as e:
                 print(f"Error interacting with Docker API: {e}")
+                return {}
             except Exception as e:
                 print(f"An unexpected error occurred: {e}")
+                return {}
         else:
             print(f"Error: {self.name} is not running. Cannot fetch logs.")
+            return {}
 
     def update(self):
         if self.is_installed:
@@ -242,6 +248,9 @@ class InstalledPlugin(Plugin):
 
                 # Perform the pull operation
                 pull_info = origin.pull()
+
+                app_path = Path("repos") / self.repo / "services" / self.folder_name
+                shutil.copytree(app_path, SERVICES / self.folder_name)
 
                 print(f"Successfully pulled changes from origin. Details: {pull_info}")
 
