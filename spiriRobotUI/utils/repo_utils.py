@@ -5,6 +5,7 @@ from git import Repo
 from pathlib import Path
 
 from spiriRobotUI.settings import PROJECT_ROOT
+from spiriRobotUI.utils.Plugin import plugins
 
 installed_repos = []
 
