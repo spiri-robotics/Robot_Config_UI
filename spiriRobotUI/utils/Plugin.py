@@ -214,6 +214,12 @@ class InstalledPlugin(Plugin):
                 for i in range(0, len(self.containers)):
                     logs = self.containers[i].logs().decode("utf-8")
                     log_dir = Path(PROJECT_ROOT) / 'logs'
+                    if log_dir.exists():
+                        for file in log_dir.iterdir():
+                            if file.is_file():
+                                file.unlink()
+                            elif file.is_dir():
+                                shutil.rmtree(file)
                     log_dir.mkdir(parents=True, exist_ok=True)  # Ensure logs directory exists
                     log_file_path = log_dir / f"{self.containers[i].name}.txt"
                     with open(log_file_path, "w") as log_file:
