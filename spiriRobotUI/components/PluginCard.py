@@ -44,6 +44,7 @@ class PluginBrowserCard:
 
         card_image.on("click", open_dialog)
 
+
 class PluginInstalledCard:
     def __init__(self, plugin: InstalledPlugin):
         self.base_card_classes = ""
@@ -110,7 +111,7 @@ class PluginInstalledCard:
                     
     def uninstall_plugin(self):
         self.plugin.uninstall()
-    
+
     def get_logs(self):
         logs = self.plugin.get_logs()
         with ui.dialog() as dialog:
@@ -118,8 +119,13 @@ class PluginInstalledCard:
                 ui.label("Plugin Logs").classes("text-lg font-bold")
                 ui.textarea(logs).classes("w-full h-64").props("readonly")
                 with ui.row().classes("justify-end"):
-                    ui.button('', icon='download', on_click=lambda: ui.download.file('logs.txt'), color='secondary')
-                    ui.button("Close", color='secondary', on_click=dialog.close)
+                    ui.button(
+                        "",
+                        icon="download",
+                        on_click=lambda: ui.download.file("logs.txt"),
+                        color="secondary",
+                    )
+                    ui.button("Close", color="secondary", on_click=dialog.close)
         dialog.classes("w-3/4 h-3/4")
         dialog.props("scrollable")
         dialog.open()
@@ -129,13 +135,17 @@ class PluginInstalledCard:
         with ui.dialog() as dialog:
             with ui.card().classes("w-3/4 h-3/4"):
                 ui.label("Edit Environment Variables").classes("text-lg font-bold")
-                code = ui.codemirror(env, language='json').classes("w-full h-64")
+                code = ui.codemirror(env, language="json").classes("w-full h-64")
                 code.props(
                     'mode="application/json" line-numbers theme="default" readonly=false tab-size=2 auto-close-brackets match-brackets line-wrapping'
                 )
                 with ui.row().classes("justify-end"):
-                    ui.button("Save", color='secondary', on_click=lambda: self.plugin.set_env(code.value))
-                    ui.button("Close", color='secondary', on_click=dialog.close)
+                    ui.button(
+                        "Save",
+                        color="secondary",
+                        on_click=lambda: self.plugin.set_env(code.value),
+                    )
+                    ui.button("Close", color="secondary", on_click=dialog.close)
         dialog.open()
 
     async def restart_plugin(self):
