@@ -56,7 +56,7 @@ class PluginInstalledCard:
         with ui.card().tight().classes(f"w-80"):
             with ui.card_section().classes('w-full'):
                 with ui.row().classes("justify-between w-full"):
-                    ui.image(self.plugin.logo).classes("w-24 h-24")
+                    ui.image(self.plugin.logo).classes("w-24 h-24 rounded")
                     self.enable_toggle = ToggleButton(
                         on_label="Disable",
                         off_label="Enable and Start",
@@ -68,32 +68,32 @@ class PluginInstalledCard:
                     ).classes("w-32 h-24")
             
             with ui.card_section().classes('w-full'):
-                ui.label(self.plugin.name.title()).classes("text-lg font-medium")
-                ui.label(self.plugin.repo).classes('text-base italic text-gray-700 dark:text-gray-300')
+                ui.label(self.plugin.name.title()).classes("text-xl font-medium")
+                ui.label(self.plugin.repo).classes('text-base font-light')
             
             if self.plugin.is_running:
                 ui.separator()
                 
                 with ui.card_section().classes('w-full'):
-                    with ui.grid(columns=2).classes("w-full text-xl"):
-                        ui.markdown("**Status:**")
-                        ui.markdown().bind_content_from(
+                    with ui.grid(columns=2).classes("w-full text-lg"):
+                        ui.label("Status:").classes('font-medium')
+                        ui.label().classes('text-lg font-light').bind_text_from(
                             self.plugin.current_stats, "status", backward=lambda v: f"{v}"
                         )
                         
                 ui.separator()
                 
                 with ui.card_section().classes('w-full'):
-                    with ui.grid(columns=2).classes("w-full text-xl"):
-                        ui.markdown("CPU usage: ")
+                    with ui.grid(columns=2).classes("w-full text-base font-light items-center"):
+                        ui.label("CPU usage: ")
                         ui.linear_progress().bind_value_from(lambda: self.plugin.current_stats["cpu"])
                         
-                        ui.markdown("Memory usage: ")
+                        ui.label("Memory usage: ")
                         ui.linear_progress().bind_value_from(
                             lambda: self.plugin.current_stats["memory"] / self.plugin.current_stats["memory_limit"]
                         )
                         
-                        ui.markdown("Disk usage: ")
+                        ui.label("Disk usage: ")
                         ui.linear_progress().bind_value_from(
                             lambda: self.plugin.current_stats["disk"] / disk
                         )
@@ -101,12 +101,12 @@ class PluginInstalledCard:
                 ui.separator()
                 
                 with ui.card_section().classes('w-full'):
-                    with ui.row():
-                        ui.button("UNINSTALL", color='secondary', on_click=lambda: self.uninstall_plugin())
-                        ui.button("VIEW LOGS", color='secondary', on_click=lambda: self.get_logs())
-                        ui.button("EDIT", color='secondary', on_click=lambda: self.edit_env())
-                        ui.button("RESTART", color='secondary', on_click=lambda: self.restart_plugin())
-                        ui.button("UPDATE", color='secondary', on_click=lambda: self.plugin.update())
+                    with ui.grid(rows=2, columns=6):
+                        ui.button("UNINSTALL", color='warning', on_click=lambda: self.uninstall_plugin()).classes('col-end-[span_3]')
+                        ui.button("VIEW LOGS", color='secondary', on_click=lambda: self.get_logs()).classes('col-end-[span_3]')
+                        ui.button("EDIT", color='secondary', on_click=lambda: self.edit_env()).classes('col-end-[span_2]')
+                        ui.button("RESTART", color='secondary', on_click=lambda: self.restart_plugin()).classes('col-end-[span_2]')
+                        ui.button("UPDATE", color='secondary', on_click=lambda: self.plugin.update()).classes('col-end-[span_2]')
                     
     def uninstall_plugin(self):
         self.plugin.uninstall()

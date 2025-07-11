@@ -107,7 +107,7 @@ plugins = {
         "another plugin",
         "spiriRobotUI/icons/spiri_drone_ui_logo.svg",
         "robot-config-test-repo",
-        "webapp-example"
+        "test"
     )
 }
 
