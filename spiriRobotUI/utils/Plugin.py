@@ -1,14 +1,11 @@
+import asyncio, docker, git, shutil, subprocess, time
+
 from pathlib import Path
-import subprocess
-import shutil
-import docker
-import git
 from nicegui import ui
+from loguru import logger
+
 from spiriRobotUI.settings import PROJECT_ROOT
 from spiriRobotUI.utils.EventBus import event_bus
-from loguru import logger
-import time
-import asyncio
 
 SERVICES = Path("/services/")
 REPOS = PROJECT_ROOT / 'repos'

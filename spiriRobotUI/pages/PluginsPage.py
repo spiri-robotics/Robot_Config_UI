@@ -11,7 +11,6 @@ from spiriRobotUI.utils.styles import styles, style_vars
 browser_cards = {}
 installed_cards = {}
 
-
 def create_browser_cards():
     for plugin in plugins.values():
         if plugin.name not in browser_cards.keys():
@@ -40,7 +39,7 @@ async def main_ui():
     with ui.tabs().classes('w-full') as tabs:
         one = ui.tab('Available')
         two = ui.tab('Installed')
-    with ui.tab_panels(tabs, value=two).classes('w-full bg-transparent').props('animated=false'):
+    with ui.tab_panels(tabs, value=one).classes('w-full bg-transparent').props('animated=false'):
         with ui.tab_panel(one):
             browser_grid_ui()
         with ui.tab_panel(two):
@@ -75,8 +74,9 @@ def on_plugin_installed(plugin_name: str):
 def on_plugin_uninstalled(plugin_name: str):
     if plugin_name in installed_cards.keys():
         del installed_cards[plugin_name]
-    browser_cards[plugin_name].render.refresh()
     installed_grid_ui.refresh()
+    plugins[plugin_name].is_installed = False
+    browser_cards[plugin_name].render.refresh()
 
 
 def on_plugin_run(plugin_name: str):

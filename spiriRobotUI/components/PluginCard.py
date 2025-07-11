@@ -6,7 +6,6 @@ from spiriRobotUI.utils.Plugin import InstalledPlugin, Plugin
 from spiriRobotUI.utils.styles import style_vars
 from spiriRobotUI.utils.system_utils import disk
 
-
 class PluginBrowserCard:
     def __init__(self, plugin: Plugin):
         self.base_card_classes = f"flex-col shadow-[{style_vars['flex-shadow']}]"
@@ -78,17 +77,18 @@ class PluginInstalledCard:
                 ui.separator()
                 
                 with ui.card_section().classes('w-full'):
-                    with ui.grid(columns=2).classes("text-lg"):
+                    with ui.grid(columns=2).classes("text-lg items-center"):
                         ui.label("Status:").classes('font-medium')
-                        self.label_status = ui.label('Status Loading...').classes('text-lg font-semibold')
+                        self.label_status = ui.label('Status Loading...').classes('font-medium')
                         self.chips = {}
-                        self.chips["Running"] = ui.chip("", color='running', text_color='white')
+                        self.chips["Running"] = ui.chip("", color='running', text_color='white').classes('text-center')
                         self.chips["Restarting"] = ui.chip("", color='restarting', text_color='white')
                         self.chips["Exited"] = ui.chip("", color='exited', text_color='white')
                         self.chips["Created"] = ui.chip("", color='created', text_color='white')
                         self.chips["Paused"] = ui.chip("", color='paused', text_color='white')
                         self.chips["Dead"] = ui.chip("", color='dead', text_color='white')
                 self.update_status()
+                
                 ui.separator()
                 
                 with ui.card_section().classes('w-full'):
@@ -110,6 +110,7 @@ class PluginInstalledCard:
                 
                 with ui.card_section().classes('w-full'):
                     with ui.grid(rows=2, columns=2):
+                        ui.button("EDIT", color='secondary', on_click=lambda: self.edit_env())
                         ui.button("UPDATE", color='secondary', on_click=lambda: self.plugin.update())
                         ui.button("VIEW LOGS", color='secondary', on_click=lambda: self.get_logs())
                         ui.button("RESTART", color='secondary', on_click=lambda: self.restart_plugin())
@@ -140,9 +141,12 @@ class PluginInstalledCard:
         if status == 'stopped':
             self.on = False
             self.label_status.classes('text-[#BF5234]')
+        else:
+            self.label_status.classes(remove='text-[#BF5234]')
 
     def uninstall_plugin(self):
         self.plugin.uninstall()
+        
 
     def get_logs(self):
         logs_list = self.plugin.get_logs()
