@@ -59,12 +59,15 @@ def add_repository(url: str):
 
     try:
         Repo.clone_from(url, clone_path)
-        repo_plugins = []
-        for plugin in (PROJECT_ROOT / "repos" / repo.name / "services").iterdir():
-            repo_plugins.append(plugin.name)
-        installed_repos.append({"name": repo_name, "plugins": repo_plugins})
-        ui.notify(f"Cloned {repo_name} into /repos")
-        display_repos.refresh()
+        if clone_path.exists():
+            repo_plugins = []
+            for plugin in (PROJECT_ROOT / "repos" / repo_name / "services").iterdir():
+                repo_plugins.append(plugin.name)
+            installed_repos.append({"name": repo_name, "plugins": repo_plugins})
+            ui.notify(f"Cloned {repo_name} into /repos")
+            display_repos.refresh()
+        else:
+            ui.notify("Clone Failed.")
     except Exception as e:
         ui.notify(f"Error cloning repo: {e}", type="negative")
 
