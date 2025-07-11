@@ -74,7 +74,7 @@ class PluginInstalledCard:
             ui.label(self.plugin.repo)
             ui.separator()
             if self.plugin.is_running:
-                with ui.grid(columns=2).classes("w-full text-xl"):
+                with ui.grid(columns=2).classes("text-xl"):
                     ui.markdown("**Status:**")
                     self.label_status = ui.label('Status Loading...').classes('text-lg font-semibold')
                     self.chips = {}
