@@ -169,19 +169,25 @@ class InstalledPlugin(Plugin):
                 print(f"Failed: {e}")
 
             while True:
+                all_stopped = True
                 try:
-                    self.container.reload()  # Refresh container status
-                    status = self.container.status
-                    if status == "exited" or status == "stopped":
-                        break
+                    self.get_containers()  # Refresh container list
+                    for container in self.containers:
+                        container.reload()
+                        status = container.status
+                        if status not in ("exited", "stopped"):
+                            all_stopped = False
+                            break
                 except docker.errors.NotFound:
-                    # Container has been removed, consider it stopped
-                    break
+                    # Container has been removed, continue checking others
+                    pass
                 except Exception as e:
                     logger.error(f"Error checking container status: {e}")
                     break
+                if all_stopped or len(self.containers) == 0:
+                    break
                 time.sleep(1)
-                logger.debug(f"Waiting for container to stop... {status}")
+                logger.debug("Waiting for containers to stop...")
 
             self.is_running = False
             self.containers = []
