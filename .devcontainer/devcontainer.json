@@ -44,5 +44,8 @@
   },
   "forwardPorts": [
     8080
+  ],
+  "mounts": [
+    "source=devcontainer-services,target=/services,type=volume"
   ]
 }
