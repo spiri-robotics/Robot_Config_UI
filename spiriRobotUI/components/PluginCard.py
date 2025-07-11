@@ -49,6 +49,7 @@ class PluginInstalledCard:
     def __init__(self, plugin: InstalledPlugin):
         self.base_card_classes = ""
         self.plugin = plugin
+        self.chips = {}
 
     @ui.refreshable
     async def render(self):
@@ -77,12 +78,17 @@ class PluginInstalledCard:
                 ui.separator()
                 
                 with ui.card_section().classes('w-full'):
-                    with ui.grid(columns=2).classes("w-full text-lg"):
+                    with ui.grid(columns=2).classes("text-lg"):
                         ui.label("Status:").classes('font-medium')
-                        ui.label().classes('text-lg font-light').bind_text_from(
-                            self.plugin.current_stats, "status", backward=lambda v: f"{v}"
-                        )
-                        
+                        self.label_status = ui.label('Status Loading...').classes('text-lg font-semibold')
+                        self.chips = {}
+                        self.chips["Running"] = ui.chip("", color='running', text_color='white')
+                        self.chips["Restarting"] = ui.chip("", color='restarting', text_color='white')
+                        self.chips["Exited"] = ui.chip("", color='exited', text_color='white')
+                        self.chips["Created"] = ui.chip("", color='created', text_color='white')
+                        self.chips["Paused"] = ui.chip("", color='paused', text_color='white')
+                        self.chips["Dead"] = ui.chip("", color='dead', text_color='white')
+                self.update_status()
                 ui.separator()
                 
                 with ui.card_section().classes('w-full'):
@@ -116,6 +122,25 @@ class PluginInstalledCard:
                         ui.button("UPDATE", color='secondary', on_click=lambda: self.plugin.update())
                         ui.button("UNINSTALL", color='warning', on_click=lambda: self.uninstall_plugin()).classes('col-end-[span_2]')
                     
+    def update_status(self):
+        status = self.plugin.get_status()
+        if isinstance(status, dict):
+            for state in status.keys():
+                if status[state] > 0:
+                    self.chips[state].visible = True
+                    self.chips[state].text = f'{state}: {status.get(state, 0)}'
+                else:
+                    self.chips[state].visible = False
+            self.label_status.visible = False
+        else:
+            for state in self.chips.keys():
+                self.chips[state].visible = False
+            self.label_status.visible = True
+            self.label_status.text = f'{status.title()}'
+        if status == 'stopped':
+            self.on = False
+            self.label_status.classes('text-[#BF5234]')
+
     def uninstall_plugin(self):
         self.plugin.uninstall()
 
