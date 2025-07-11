@@ -107,13 +107,13 @@ class InstalledPlugin(Plugin):
     def __init__(self, name, logo, repo, folder_name):
         super().__init__(name, logo, repo, folder_name)
         self.is_installed = True
-        self.container = None
+        self.containers = []
         client = docker.from_env()
         containers = client.containers.list(all=True)
         for container in containers:
             if self.folder_name in container.name:
-                self.container = container
-        if self.container and self.container.status == "running":
+                self.containers.append(container)
+        if len(self.containers) > 0:
             self.is_running = True
         else:
             self.is_running = False
@@ -136,17 +136,14 @@ class InstalledPlugin(Plugin):
                 )
                 await asyncio.sleep(2)
                 # Find and assign the new container
+                self.containers.clear()  # Clear previous containers
                 client = docker.from_env()
                 containers = client.containers.list(all=True)
-                found = False
                 for container in containers:
                     if self.folder_name in container.name:
-                        self.container = container
-                        found = True
-                        break
-                if not found:
-                    self.container = None
-                    print(f"No running container found for {self.folder_name}")
+                        self.containers.append(container)
+                if len(self.containers) == 0:
+                    print(f"No running containers found for {self.folder_name}")
             except subprocess.CalledProcessError as e:
                 print(f"Failed: {e}")
                 return
@@ -207,11 +204,12 @@ class InstalledPlugin(Plugin):
         if self.is_running:
             print(f"Fetching logs for {self.name}")
             try:
+                self.containers.clear()  # Clear previous containers
                 client = docker.from_env()
                 containers = client.containers.list(all=True)
                 for container in containers:
                     if self.folder_name in container.name:
-                        self.container = container
+                        self.containers.append(container)
                 logs = self.container.logs().decode("utf-8")
                 log_file_path = Path(PROJECT_ROOT) / "logs.txt"
                 with open(log_file_path, "a") as log_file:
