@@ -103,12 +103,18 @@ class PluginInstalledCard:
                 ui.separator()
                 
                 with ui.card_section().classes('w-full'):
-                    with ui.grid(rows=2, columns=6):
-                        ui.button("UNINSTALL", color='warning', on_click=lambda: self.uninstall_plugin()).classes('col-end-[span_3]')
-                        ui.button("VIEW LOGS", color='secondary', on_click=lambda: self.get_logs()).classes('col-end-[span_3]')
-                        ui.button("EDIT", color='secondary', on_click=lambda: self.edit_env()).classes('col-end-[span_2]')
-                        ui.button("RESTART", color='secondary', on_click=lambda: self.restart_plugin()).classes('col-end-[span_2]')
-                        ui.button("UPDATE", color='secondary', on_click=lambda: self.plugin.update()).classes('col-end-[span_2]')
+                    with ui.grid(rows=2, columns=2):
+                        ui.button("UPDATE", color='secondary', on_click=lambda: self.plugin.update())
+                        ui.button("VIEW LOGS", color='secondary', on_click=lambda: self.get_logs())
+                        ui.button("RESTART", color='secondary', on_click=lambda: self.restart_plugin())
+                        
+            else:
+                ui.space()
+                with ui.card_section().classes('w-full'):
+                    with ui.grid(rows=2, columns=2):
+                        ui.button("EDIT", color='secondary', on_click=lambda: self.edit_env())
+                        ui.button("UPDATE", color='secondary', on_click=lambda: self.plugin.update())
+                        ui.button("UNINSTALL", color='warning', on_click=lambda: self.uninstall_plugin()).classes('col-end-[span_2]')
                     
     def uninstall_plugin(self):
         self.plugin.uninstall()
