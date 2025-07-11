@@ -4,6 +4,7 @@ from pathlib import Path
 import shutil
 
 from spiriRobotUI.settings import PROJECT_ROOT
+from spiriRobotUI.utils.Plugin import plugins
 
 installed_repos = []
 
