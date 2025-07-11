@@ -210,13 +210,16 @@ class InstalledPlugin(Plugin):
                 for container in containers:
                     if self.folder_name in container.name:
                         self.containers.append(container)
-                logs = self.container.logs().decode("utf-8")
-                log_file_path = Path(PROJECT_ROOT) / "logs.txt"
-                with open(log_file_path, "a") as log_file:
-                    log_file.write(f"\n--- Logs for {self.name} ---\n")
-                    log_file.write(logs)
-                    log_file.write("\n")
-                return logs
+                logs_list = {}
+                for i in range(0, len(self.containers)):
+                    logs = self.containers[i].logs().decode("utf-8")
+                    log_file_path = Path(PROJECT_ROOT) / 'logs' / f"{self.containers[i].name}.txt"
+                    with open(log_file_path, "a") as log_file:
+                        log_file.write(f"\n--- Logs for {self.containers[i].name} ---\n")
+                        log_file.write(logs)
+                        log_file.write("\n")
+                    logs_list[self.containers[i].name] = logs
+                return logs_list
             except docker.errors.NotFound:
                 print(f"Error: Container '{self.folder_name}' not found.")
             except docker.errors.APIError as e:
@@ -280,39 +283,47 @@ class InstalledPlugin(Plugin):
         if not self.is_running:
             print(f"{self.name} is not running. Cannot fetch stats.")
             return
+        self.containers = []
         client = docker.from_env()
         containers = client.containers.list(all=True)
-        found = False
         for container in containers:
             if self.folder_name in container.name:
-                self.container = container
-                found = True
-                break
-        if not found or not self.container:
+                self.containers.append(container)
+        if len(self.containers) == 0:
             print(f"No running container found for {self.folder_name}")
             return
+        total_cpu = 0.0
+        total_memory = 0.0
+        total_memory_limit = 0.0
+        status = "running"
         try:
-            stats = self.container.stats(stream=False)
-            cpu_delta = (
-                stats["cpu_stats"]["cpu_usage"]["total_usage"]
-                - stats["precpu_stats"]["cpu_usage"]["total_usage"]
-            )
-            system_delta = (
-                stats["cpu_stats"]["system_cpu_usage"]
-                - stats["precpu_stats"]["system_cpu_usage"]
-            )
-            cpu_percent = 0.0
-            if system_delta > 0 and cpu_delta > 0:
-                cpu_percent = (cpu_delta / system_delta) * len(
-                    stats["cpu_stats"]["cpu_usage"]["percpu_usage"]
+            for container in self.containers:
+                stats = container.stats(stream=False)
+                cpu_delta = (
+                    stats["cpu_stats"]["cpu_usage"]["total_usage"]
+                    - stats["precpu_stats"]["cpu_usage"]["total_usage"]
                 )
-            self.current_stats["cpu"] = cpu_percent
-            self.current_stats["memory"] = stats["memory_stats"]["usage"] / (1024**2)
-            self.current_stats["memory_limit"] = stats["memory_stats"]["limit"] / (
-                1024**2
-            )
+                system_delta = (
+                    stats["cpu_stats"]["system_cpu_usage"]
+                    - stats["precpu_stats"]["system_cpu_usage"]
+                )
+                cpu_percent = 0.0
+                if system_delta > 0 and cpu_delta > 0:
+                    cpu_percent = (cpu_delta / system_delta) * len(
+                        stats["cpu_stats"]["cpu_usage"]["percpu_usage"]
+                    )
+                total_cpu += cpu_percent
+                total_memory += stats["memory_stats"]["usage"] / (1024**2)
+                total_memory_limit += stats["memory_stats"]["limit"] / (1024**2)
+                # If any container is not running, mark status as not running
+                if container.status != "running":
+                    status = container.status
+
+            self.current_stats["cpu"] = total_cpu
+            self.current_stats["memory"] = total_memory
+            self.current_stats["memory_limit"] = total_memory_limit
             self.current_stats["disk"] = 10  # Placeholder
-            self.current_stats["status"] = self.container.status
+            self.current_stats["status"] = status
         except Exception as e:
             print(f"Error fetching stats: {e}")
 
