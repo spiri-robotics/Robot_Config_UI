@@ -1,11 +1,10 @@
+import cpuinfo, datetime, psutil
+
 from nicegui import ui
-from spiriRobotUI.utils.styles import styles
-from spiriRobotUI.components.Sidebar import sidebar
+
 from spiriRobotUI.components.Header import header
-from nicegui import ui
-import psutil
-import cpuinfo
-import datetime
+from spiriRobotUI.components.Sidebar import sidebar
+from spiriRobotUI.utils.styles import styles
 
 def format_bytes(bytes_val):
     return f"{bytes_val / (1024 ** 3):.1f} GB"

@@ -12,9 +12,12 @@ import asyncio
 import os
 
 SERVICES = Path("/services/")
+REPOS = PROJECT_ROOT / 'repos'
+if not REPOS.exists():
+    REPOS.mkdir()
 
+plugins = {}
 installed_plugins = {}
-
 
 class Plugin:
     """Base class for all plugins"""
@@ -89,19 +92,6 @@ class Plugin:
             return readme_contents
         else:
             return ""
-
-
-plugins = {}
-
-for repo in (PROJECT_ROOT / "repos").iterdir():
-    for plugin in (PROJECT_ROOT / "repos" / repo.name / "services").iterdir():
-        logo = (
-            PROJECT_ROOT / "repos" / repo.name / "services" / plugin.name / "logo.jpg"
-        )
-        if not logo.exists():
-            logo = "spiriRobotUI/icons/spiri_drone_ui_logo.svg"
-        plugins[plugin.name] = Plugin(plugin.name, str(logo), repo.name, plugin.name)
-
 
 class InstalledPlugin(Plugin):
 
@@ -280,9 +270,6 @@ class InstalledPlugin(Plugin):
             print(f"Error updating .env file: {e}")
 
     def get_current_stats(self):
-        if not self.is_running:
-            print(f"{self.name} is not running. Cannot fetch stats.")
-            return
         client = docker.from_env()
         containers = client.containers.list(all=True)
         found = False
@@ -324,7 +311,16 @@ class InstalledPlugin(Plugin):
             self.get_current_stats()
             await asyncio.sleep(1)
 
-
+# Scan the REPOS directory and register all plugins
+for repo in REPOS.iterdir():
+    for plugin in (PROJECT_ROOT / "repos" / repo.name / "services").iterdir():
+        logo = (
+            PROJECT_ROOT / "repos" / repo.name / "services" / plugin.name / "logo.jpg"
+        )
+        if not logo.exists():
+            logo = "spiriRobotUI/icons/spiri_drone_ui_logo.svg"
+        plugins[plugin.name] = Plugin(plugin.name, str(logo), repo.name, plugin.name)
+        
 # Scan the SERVICES directory and register installed plugins.
 for service_dir in SERVICES.iterdir():
     if service_dir.is_dir():

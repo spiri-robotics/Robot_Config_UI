@@ -52,7 +52,8 @@ class PluginInstalledCard:
 
     @ui.refreshable
     async def render(self):
-        self.plugin.get_current_stats()
+        if self.plugin.is_running:
+            self.plugin.get_current_stats()
         
         with ui.card().tight().classes(f"w-80"):
             with ui.card_section().classes('w-full'):

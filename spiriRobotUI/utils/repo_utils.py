@@ -1,7 +1,8 @@
+import shutil
+
 from nicegui import ui
 from git import Repo
 from pathlib import Path
-import shutil
 
 from spiriRobotUI.settings import PROJECT_ROOT
 

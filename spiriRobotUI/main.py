@@ -1,5 +1,4 @@
 from pathlib import Path
-
 from nicegui import ui
 
 from spiriRobotUI.pages.NetworkSettingsPage import network_ui as network_settings_page

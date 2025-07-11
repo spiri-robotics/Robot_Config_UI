@@ -1,5 +1,3 @@
-import asyncio
-
 from nicegui import ui
 
 from spiriRobotUI.components.ToggleButton import ToggleButton

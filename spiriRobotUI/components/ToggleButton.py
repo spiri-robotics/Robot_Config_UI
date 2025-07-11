@@ -1,5 +1,6 @@
-from nicegui import ui
 import inspect
+
+from nicegui import ui
 
 class ToggleButton(ui.button):
     def __init__(

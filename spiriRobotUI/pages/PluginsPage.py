@@ -3,11 +3,10 @@ from nicegui import ui
 from spiriRobotUI.components.Header import header
 from spiriRobotUI.components.PluginCard import PluginBrowserCard, PluginInstalledCard
 from spiriRobotUI.components.Sidebar import sidebar
-from spiriRobotUI.utils.Plugin import plugins, installed_plugins
-from spiriRobotUI.utils.plugin_utils import load_plugins
 from spiriRobotUI.utils.EventBus import event_bus
-from spiriRobotUI.utils.styles import styles, style_vars
+from spiriRobotUI.utils.Plugin import plugins, installed_plugins
 from spiriRobotUI.utils.repo_utils import display_repos
+from spiriRobotUI.utils.styles import styles, style_vars
 
 browser_cards = {}
 installed_cards = {}
@@ -35,7 +34,6 @@ async def main_ui():
 
     ui.separator()
 
-    load_plugins()
     create_browser_cards()
     update_installed_cards()
     

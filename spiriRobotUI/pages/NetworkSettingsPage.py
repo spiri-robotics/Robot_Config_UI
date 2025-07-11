@@ -1,9 +1,9 @@
+import asyncio, speedtest
+
 from nicegui import ui
-from spiriRobotUI.utils.styles import styles
-from spiriRobotUI.components.Sidebar import sidebar
 from spiriRobotUI.components.Header import header
-import speedtest
-import asyncio
+from spiriRobotUI.components.Sidebar import sidebar
+from spiriRobotUI.utils.styles import styles
 
 @ui.page("/network")
 async def network_ui():
