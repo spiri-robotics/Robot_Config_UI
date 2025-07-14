@@ -161,12 +161,12 @@ class PluginInstalledCard:
                 with ui.tab_panels(tabs, value=tab_names[0]) as panels:
                     for name in tab_names:
                         with ui.tab_panel(name):
-                            ui.textarea(logs_list[name]).classes("w-full h-64").props("readonly")
+                            ui.code(logs_list[name], language='text').classes("w-full h-64 overflow-auto")
                             ui.button(
                                 "Download",
                                 icon="download",
                                 color="secondary",
-                                on_click=lambda n=name: ui.download.text(logs_list[n], filename=f"{n}.txt"),
+                                on_click=lambda n=name: ui.download.content(logs_list[n], f"{n}.txt"),
                             )
                 with ui.row().classes("justify-end"):
                     ui.button("Close", color="secondary", on_click=dialog.close)
