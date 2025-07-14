@@ -259,6 +259,9 @@ class InstalledPlugin(Plugin):
 
     def update(self):
         if self.is_installed:
+            if self.repo is None:
+                print(f"Error: {self.name} does not have a repository to update from.")
+                return
             repo_path = str(PROJECT_ROOT) + "/repos/" + self.repo
 
             try:
@@ -375,12 +378,22 @@ class InstalledPlugin(Plugin):
 # Scan the SERVICES directory and register installed plugins.
 for service_dir in SERVICES.iterdir():
     if service_dir.is_dir():
+        has_repo = False
         for plugin in plugins.values():
             if (
                 service_dir.name == plugin.folder_name
                 and plugin.name not in installed_plugins
             ):
                 plugin.is_installed = True
+                has_repo = True
                 installed_plugins[plugin.name] = InstalledPlugin(
                     plugin.name, plugin.logo, plugin.repo, plugin.folder_name
                 )
+        if not has_repo:
+            logo = service_dir / "logo.jpg"
+            if not logo.exists():
+                logo = "spiriRobotUI/icons/cat_icon.jpg"
+            installed_plugins[service_dir.name] = InstalledPlugin(
+                service_dir.name, logo, None, service_dir.name
+            )
+            installed_plugins[service_dir.name].is_installed = True
