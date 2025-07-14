@@ -259,6 +259,9 @@ class InstalledPlugin(Plugin):
 
     def update(self):
         if self.is_installed:
+            if self.repo is None:
+                print(f"Error: {self.name} does not have a repository to update from.")
+                return
             repo_path = str(PROJECT_ROOT) + "/repos/" + self.repo
 
             try:
