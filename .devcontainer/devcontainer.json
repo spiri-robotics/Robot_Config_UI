@@ -38,5 +38,6 @@
     },
     "forwardPorts": [
         8080
-    ]
+    ],
+    "postCreateCommand": "sudo mkdir /services && sudo chown vscode /services"
 }
