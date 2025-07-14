@@ -77,7 +77,7 @@ class PluginInstalledCard:
                 ui.separator()
                 
                 with ui.card_section().classes('w-full'):
-                    with ui.grid(columns=2).classes("text-lg items-center"):
+                    with ui.row().classes('justify-between items-center'):
                         ui.label("Status:").classes('font-medium')
                         self.label_status = ui.label('Status Loading...').classes('font-medium')
                         self.chips = {}
