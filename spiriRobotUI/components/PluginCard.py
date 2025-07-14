@@ -118,11 +118,12 @@ class PluginInstalledCard:
                         color="secondary",
                         on_click=lambda: self.restart_plugin(),
                     )
-                    ui.button(
-                        "UPDATE",
-                        color="secondary",
-                        on_click=lambda: self.plugin.update(),
-                    )
+                    if self.plugin.repo:
+                        ui.button(
+                            "UPDATE",
+                            color="secondary",
+                            on_click=lambda: self.plugin.update(),
+                        )
 
     def update_status(self):
         status = self.plugin.get_status()
