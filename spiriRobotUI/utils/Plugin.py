@@ -145,7 +145,7 @@ class InstalledPlugin(Plugin):
             return "stopped"
         self.update_containers()
         if len(self._containers) == 0:
-            return "stopped"
+            return "Loading..."
         container_states = [c.status for c in self._containers]
         states = {
             "Running": container_states.count("running"),
@@ -383,7 +383,6 @@ class InstalledPlugin(Plugin):
         while self.is_running:
             self.get_current_stats()
             await asyncio.sleep(1)
-
 
 # Scan the SERVICES directory and register installed plugins.
 for service_dir in SERVICES.iterdir():
