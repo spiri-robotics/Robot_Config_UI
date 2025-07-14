@@ -19,7 +19,7 @@ class Plugin:
     """Base class for all plugins"""
 
     def __init__(self, name: str, logo: str | Path, repo: str, folder_name: str):
-        self.name = name.replace('_', ' ').replace('-', ' ').title()
+        self.name = name
         self.logo = logo
         self.url = ""
         self.repo = repo

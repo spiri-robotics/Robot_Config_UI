@@ -26,7 +26,7 @@ class PluginBrowserCard:
             ui.separator()
             
             with ui.card_section().classes("w-full"):
-                ui.label(self.plugin.name).classes("text-lg font-medium pb-4")
+                ui.label(self.plugin.name.replace('_', ' ').replace('-', ' ').title()).classes("text-lg font-medium pb-4")
                 self.install_toggle = ToggleButton(
                     on_label="Uninstall",
                     off_label="Install",
@@ -70,7 +70,7 @@ class PluginInstalledCard:
                     ).classes("w-32 h-24")
             
             with ui.card_section().classes('w-full'):
-                ui.label(self.plugin.name.title()).classes("text-xl font-medium")
+                ui.label(self.plugin.name.replace('_', ' ').replace('-', ' ').title()).classes("text-xl font-medium")
                 ui.label(self.plugin.repo).classes('text-base font-light')
             
             if self.plugin.is_running:
