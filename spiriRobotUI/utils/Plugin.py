@@ -9,6 +9,7 @@ from spiriRobotUI.utils.EventBus import event_bus
 from loguru import logger
 import time
 import asyncio
+import re
 
 SERVICES = Path("/services/")
 
@@ -52,6 +53,17 @@ class Plugin:
                 if not env_file.exists():
                     with open(env_file, "w") as f:
                         f.write("# Default environment variables\n")
+                        compose_file = SERVICES / self.folder_name / "docker-compose.yaml"
+                        if not compose_file.exists():
+                            compose_file = SERVICES / self.folder_name / "docker-compose.yml"
+                            if not compose_file.exists():
+                                ui.notify(f"{compose_file} not found!", type="error")
+                        compose_text = compose_file.read_text()
+                        variables = set(re.findall(r'\$[{]?([A-Z_][A-Z0-9_]*)[}]?', compose_text))
+
+                        for var in variables:
+                            logger.debug(f"Detected variable: {var}")
+                            f.write(f"{var}=\n")
             except shutil.Error as e:
                 print(f"Error copying folder: {e}")
             except OSError as e:
