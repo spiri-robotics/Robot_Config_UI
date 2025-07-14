@@ -11,8 +11,8 @@ class ToggleButton(ui.button):
         on_switch=None,
         off_switch=None,
         state,
-        on_color="positive",
-        off_color="warning",
+        on_color="negative",
+        off_color="positive",
         **kwargs,
     ):
         

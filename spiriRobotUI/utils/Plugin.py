@@ -19,7 +19,7 @@ class Plugin:
     """Base class for all plugins"""
 
     def __init__(self, name: str, logo: str | Path, repo: str, folder_name: str):
-        self.name = name
+        self.name = name.replace('_', ' ').replace('-', ' ').title()
         self.logo = logo
         self.url = ""
         self.repo = repo
@@ -360,26 +360,3 @@ class InstalledPlugin(Plugin):
         while self.is_running:
             self.get_current_stats()
             await asyncio.sleep(1)
-
-# Scan the REPOS directory and register all plugins
-for repo in REPOS.iterdir():
-    for plugin in (PROJECT_ROOT / "repos" / repo.name / "services").iterdir():
-        logo = (
-            PROJECT_ROOT / "repos" / repo.name / "services" / plugin.name / "logo.jpg"
-        )
-        if not logo.exists():
-            logo = "spiriRobotUI/icons/spiri_drone_ui_logo.svg"
-        plugins[plugin.name] = Plugin(plugin.name, str(logo), repo.name, plugin.name)
-        
-# Scan the SERVICES directory and register installed plugins.
-for service_dir in SERVICES.iterdir():
-    if service_dir.is_dir():
-        for plugin in plugins.values():
-            if (
-                service_dir.name == plugin.folder_name
-                and plugin.name not in installed_plugins
-            ):
-                plugin.is_installed = True
-                installed_plugins[plugin.name] = InstalledPlugin(
-                    plugin.name, plugin.logo, plugin.repo, plugin.folder_name
-                )

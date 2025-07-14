@@ -26,14 +26,14 @@ class PluginBrowserCard:
             ui.separator()
             
             with ui.card_section().classes("w-full"):
-                ui.label(self.plugin.name.title()).classes("text-lg font-medium pb-4")
+                ui.label(self.plugin.name).classes("text-lg font-medium pb-4")
                 self.install_toggle = ToggleButton(
                     on_label="Uninstall",
                     off_label="Install",
                     on_switch=lambda: self.plugin.uninstall(),
                     off_switch=lambda: self.plugin.install(),
                     state=self.plugin.is_installed,
-                    on_color="warning",
+                    on_color="negative",
                     off_color="secondary",
                 ).classes("w-full")
 
@@ -65,8 +65,8 @@ class PluginInstalledCard:
                         on_switch=self.plugin.stop,
                         off_switch=self.plugin.run,
                         state=self.plugin.is_running,
-                        on_color="warning",
-                        off_color="secondary",
+                        on_color="negative",
+                        off_color="positive",
                     ).classes("w-32 h-24")
             
             with ui.card_section().classes('w-full'):
@@ -121,7 +121,7 @@ class PluginInstalledCard:
                     with ui.grid(rows=2, columns=2):
                         ui.button("EDIT", color='secondary', on_click=lambda: self.edit_env())
                         ui.button("UPDATE", color='secondary', on_click=lambda: self.plugin.update())
-                        ui.button("UNINSTALL", color='warning', on_click=lambda: self.uninstall_plugin()).classes('col-end-[span_2]')
+                        ui.button("UNINSTALL", color='negative', on_click=lambda: self.uninstall_plugin()).classes('col-end-[span_2]')
                     
     def update_status(self):
         status = self.plugin.get_status()
