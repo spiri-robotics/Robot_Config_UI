@@ -258,8 +258,13 @@ class InstalledPlugin(Plugin):
                 # Perform the pull operation
                 pull_info = origin.pull()
 
-                app_path = Path("repos") / self.repo / "services" / self.folder_name
-                shutil.copytree(app_path, SERVICES / self.folder_name)
+                app_path = Path(repo_path) / "services" / self.folder_name
+                dest_path = SERVICES / self.folder_name
+                # Remove the existing destination directory if it exists
+                if dest_path.exists():
+                    shutil.rmtree(dest_path)
+                # Copy updated files over
+                shutil.copytree(app_path, dest_path)
 
                 print(f"Successfully pulled changes from origin. Details: {pull_info}")
 
