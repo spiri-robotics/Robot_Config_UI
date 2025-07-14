@@ -120,7 +120,7 @@ class InstalledPlugin(Plugin):
             return "stopped"
         self.update_containers()
         if len(self._containers) == 0:
-            return "stopped"
+            return "Loading..."
         container_states = [c.status for c in self._containers]
         states = {
             "Running": container_states.count("running"),
