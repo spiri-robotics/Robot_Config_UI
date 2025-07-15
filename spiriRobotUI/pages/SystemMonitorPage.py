@@ -1,10 +1,11 @@
-import cpuinfo, datetime, psutil
+import cpuinfo, datetime, psutil, asyncio
 
 from nicegui import ui
 
 from spiriRobotUI.components.Header import header
 from spiriRobotUI.components.Sidebar import sidebar
-from spiriRobotUI.utils.styles import styles
+from spiriRobotUI.utils.BindableObject import BindableObject
+from spiriRobotUI.utils.styles import styles, style_vars
 
 def format_bytes(bytes_val):
     return f"{bytes_val / (1024 ** 3):.1f} GB"
@@ -21,60 +22,64 @@ async def system_ui():
         network_tab = ui.tab('NETWORK')
         about_tab = ui.tab('ABOUT')
 
-    with ui.tab_panels(tabs, value=system_tab).classes('w-full'):
+    with ui.tab_panels(tabs, value=system_tab).classes('w-full bg-transparent').props('animated=false'):
         with ui.tab_panel(system_tab):
             ui.markdown("## 🖥️ System Monitor")
-
-            with ui.row().classes('w-full justify-around'):
+                
+            with ui.grid(columns=3, rows=2).classes('w-full'):
 
                 # CPU Card
-                with ui.card().classes('w-1/2 bg-gray-900 text-white'):
-                    cpu_percent = psutil.cpu_percent(percpu=False)
-                    ui.label(f"🧠 {cpu_percent:.1f}%").classes('text-3xl font-bold text-center text-blue-400')
+                with ui.card().classes('row-span-2'):
+                    cpu_percent = psutil.cpu_percent(percpu=True)
+                    avg = 0
+                    for core in cpu_percent:
+                        avg += core
+                    avg /= len(cpu_percent)
+                    
+                    ui.label(f"🧠 CPU: {avg:.1f}%").classes('text-3xl font-bold text-[#274c77] dark:text-[#9EDFEC]')
                     info = cpuinfo.get_cpu_info()
-                    ui.label(f"{info['brand_raw']}").classes('text-sm')
+                    ui.label(f"{info['brand_raw']}").classes('text-base')
                     freqs = psutil.cpu_freq(percpu=True)
-                    for i, freq in enumerate(freqs):
-                        ui.label(f"cpu{i}: {psutil.cpu_percent(percpu=True)[i]}% ({freq.current:.0f}MHz)")
-
-                    ui.label(f"🕒 {datetime.datetime.now().strftime('%H:%M:%S')}").classes('text-xs')
+                    with ui.grid(columns=2):
+                        for i, freq in enumerate(freqs):
+                            ui.label(f'Core {i+1}: ').classes('text-base')
+                            ui.label(f'{cpu_percent[i]}% ({freq.current:.0f}MHz)').classes('text-base')
+                            # amt = BindableObject(cpu_percent[i]/100)
+                            # ui.linear_progress(size='20px', show_value=False, color='secondary').props('track-color=blue-grey-2').bind_value_from(amt, 'value')
+                    ui.label(f"🕒 {datetime.datetime.now().strftime('%H:%M:%S')}")
 
                 # Memory Card
-                with ui.card().classes('w-1/2 bg-gray-900 text-white'):
+                with ui.card():
                     mem = psutil.virtual_memory()
-                    ui.label(f"💾 {mem.percent:.1f}%").classes('text-3xl font-bold text-center text-blue-400')
-                    ui.label("Memory").classes('text-sm')
-                    ui.label(f"RAM: {format_bytes(mem.used)} / {format_bytes(mem.total)}")
+                    ui.label(f"💾 Memory: {mem.percent:.1f}%").classes('text-3xl font-bold text-[#274c77] dark:text-[#9EDFEC]')
+                    ui.label(f"RAM: {format_bytes(mem.used)} / {format_bytes(mem.total)}").classes('text-base')
                     swap = psutil.swap_memory()
-                    ui.label(f"SWAP: {format_bytes(swap.used)} / {format_bytes(swap.total)}")
-                    ui.label(f"🕒 {datetime.datetime.now().strftime('%H:%M:%S')}").classes('text-xs')
-
-            with ui.row().classes('w-full justify-around mt-4'):
-
-                # Disk Card
-                with ui.card().classes('w-1/2 bg-gray-900 text-white'):
-                    disk = psutil.disk_usage('/')
-                    ui.label(f"🗄️ {disk.percent:.1f}%").classes('text-3xl font-bold text-center text-blue-400')
-                    ui.label("Disk").classes('text-sm')
-                    ui.label(f"{format_bytes(disk.used)} / {format_bytes(disk.total)} used")
+                    ui.label(f"SWAP: {format_bytes(swap.used)} / {format_bytes(swap.total)}").classes('text-base')
+                    ui.label(f"🕒 {datetime.datetime.now().strftime('%H:%M:%S')}")
 
                 # Temperature Card (with fallback)
-                with ui.card().classes('w-1/2 bg-gray-900 text-white'):
-                    ui.label("🌡️ Loading.. °C").classes('text-3xl font-bold text-center text-blue-400')
+                with ui.card().classes('row-span-2'):
+                    ui.label("🌡️ Core Temperature").classes('text-3xl font-bold text-[#274c77] dark:text-[#9EDFEC]')
                     try:
                         temps = psutil.sensors_temperatures()
                         if "coretemp" in temps:
                             core_temps = temps["coretemp"]
                             for t in core_temps:
-                                ui.label(f"{t.label}: {t.current:.1f}°C")
+                                ui.label(f"{t.label}: {t.current:.1f}°C").classes('text-base')
                         elif temps:
                             for label, sensors in temps.items():
                                 for t in sensors:
-                                    ui.label(f"{label} {t.label}: {t.current:.1f}°C")
+                                    ui.label(f"{label} {t.label}: {t.current:.1f}°C").classes('text-base')
                         else:
-                            ui.label("Temperature data not available")
+                            ui.label("Temperature data not available").classes('text-base')
                     except Exception as e:
-                        ui.label("Temperature sensors unavailable").classes('text-xs')
+                        ui.label("Temperature sensors unavailable").classes('text-base')
+                        
+                # Disk Card
+                with ui.card():
+                    disk = psutil.disk_usage('/')
+                    ui.label(f"🗄️ Disk Usage: {disk.percent:.1f}%").classes('text-3xl font-bold text-[#274c77] dark:text-[#9EDFEC]')
+                    ui.label(f"{format_bytes(disk.used)} / {format_bytes(disk.total)} used").classes('text-base')
 
         with ui.tab_panel(processes_tab):
             ui.markdown("## 🖥️ Processes")
