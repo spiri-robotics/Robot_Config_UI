@@ -1,43 +1,41 @@
-from nicegui import ui
+from nicegui import ui, Client
 
 from spiriRobotUI.components.PluginDialog import PluginDialog
 from spiriRobotUI.components.ToggleButton import ToggleButton
 from spiriRobotUI.utils.Plugin import InstalledPlugin, Plugin
-from spiriRobotUI.utils.styles import DARK_MODE
+from spiriRobotUI.utils.styles import style_vars
 from spiriRobotUI.utils.system_utils import disk
-
 
 class PluginBrowserCard:
     def __init__(self, plugin: Plugin):
-        self.base_card_classes = "w-56 h-64 flex-col justify-between"
+        self.base_card_classes = f"flex-col shadow-[{style_vars['flex-shadow']}]"
         self.plugin_dialog = PluginDialog(plugin)
         self.plugin = plugin
         self.install_toggle = None
 
     @ui.refreshable
     def render(self):
-        browser_card = ui.card().classes(
-            f"transition transform hover:scale-105 hover:border-blue-500 {self.base_card_classes}"
-        )
-        if DARK_MODE:
-            browser_card.classes("dark-card")
-
-        with browser_card:
-            if self.plugin.logo:
+        with ui.card().tight().classes(
+            f"w-56 mb-2 transition transform hover:scale-105 {self.base_card_classes}"
+        ):
+            with ui.card_section().classes('w-full justify-center'):
                 card_image = ui.image(self.plugin.logo).classes(
-                    "w-full h-48 object-cover cursor-pointer"
+                    "w-full cursor-pointer rounded self-center"
                 )
-            with ui.row().classes("items-center justify-between w-full"):
-                ui.label(self.plugin.name.upper()).classes("text-lg font-bold")
+                
+            ui.separator()
+            
+            with ui.card_section().classes("w-full"):
+                ui.label(self.plugin.name.replace('_', ' ').replace('-', ' ').title()).classes("text-lg font-medium pb-4")
                 self.install_toggle = ToggleButton(
-                    on_label="Install",
-                    off_label="Uninstall",
-                    on_switch=lambda: self.plugin.install(),
-                    off_switch=lambda: self.plugin.uninstall(),
-                    state=not self.plugin.is_installed,
-                    on_color="secondary",
-                    off_color="warning",
-                ).classes("w-1/2")
+                    on_label="Uninstall",
+                    off_label="Install",
+                    on_switch=lambda: self.plugin.uninstall(),
+                    off_switch=lambda: self.plugin.install(),
+                    state=self.plugin.is_installed,
+                    on_color="negative",
+                    off_color="secondary",
+                ).classes("w-full")
 
         def open_dialog():
             self.plugin_dialog.generate_dialog()
@@ -54,77 +52,87 @@ class PluginInstalledCard:
 
     @ui.refreshable
     async def render(self):
-        self.plugin.get_current_stats()
-        installed_card = ui.card().classes(f"{self.base_card_classes}")
-        if DARK_MODE:
-            installed_card.classes(f"dark-card")
-        with installed_card:
-            with ui.row().classes("justify-between w-full"):
-                ui.image(self.plugin.logo).classes("w-24 h-24")
-                self.enable_toggle = ToggleButton(
-                    on_label="Enable and Start",
-                    off_label="Disable",
-                    on_switch=self.plugin.run,
-                    off_switch=self.plugin.stop,
-                    state=not self.plugin.is_running,
-                    on_color="secondary",
-                    off_color="warning",
-                ).classes("w-28 h-24")
-            ui.label(self.plugin.name.upper()).classes("text-lg font-bold")
-            ui.label(self.plugin.repo)
-            ui.separator()
+        if self.plugin.is_running:
+            self.plugin.get_current_stats()
+        
+        with ui.card().tight().classes(f"w-80"):
+            with ui.card_section().classes('w-full'):
+                with ui.row().classes("justify-between w-full"):
+                    ui.image(self.plugin.logo).classes("w-24 h-24 rounded")
+                    self.enable_toggle = ToggleButton(
+                        on_label="Disable",
+                        off_label="Enable and Start",
+                        on_switch=self.plugin.stop,
+                        off_switch=self.plugin.run,
+                        state=self.plugin.is_running,
+                        on_color="negative",
+                        off_color="positive",
+                    ).classes("w-32 h-24")
+            
+            with ui.card_section().classes('w-full'):
+                ui.label(self.plugin.name.replace('_', ' ').replace('-', ' ').title()).classes("text-xl font-medium")
+                ui.label(self.plugin.repo).classes('text-base font-light')
+            
             if self.plugin.is_running:
-                with ui.grid(columns=2).classes("text-xl"):
-                    ui.markdown("**Status:**")
-                    self.label_status = ui.label('Status Loading...').classes('text-lg font-semibold')
-                    self.chips = {}
-                    self.chips["Running"] = ui.chip("", color='running', text_color='white')
-                    self.chips["Restarting"] = ui.chip("", color='restarting', text_color='white')
-                    self.chips["Exited"] = ui.chip("", color='exited', text_color='white')
-                    self.chips["Created"] = ui.chip("", color='created', text_color='white')
-                    self.chips["Paused"] = ui.chip("", color='paused', text_color='white')
-                    self.chips["Dead"] = ui.chip("", color='dead', text_color='white')
+                ui.separator()
+                
+                with ui.card_section().classes('w-full'):
+                    with ui.row().classes('justify-between items-center'):
+                        ui.label("Status:").classes('font-medium')
+                        self.label_status = ui.label('Status Loading...').classes('font-medium')
+                        self.chips = {}
+                        self.chips["Running"] = ui.chip("", color='running', text_color='white').classes('text-center')
+                        self.chips["Restarting"] = ui.chip("", color='restarting', text_color='white')
+                        self.chips["Exited"] = ui.chip("", color='exited', text_color='white')
+                        self.chips["Created"] = ui.chip("", color='created', text_color='white')
+                        self.chips["Paused"] = ui.chip("", color='paused', text_color='white')
+                        self.chips["Dead"] = ui.chip("", color='dead', text_color='white')
                 self.update_status()
+                
                 ui.separator()
-                with ui.grid(columns=2).classes("w-full text-xl"):
-                    ui.markdown("CPU usage: ")
-                    cpu_progress = ui.linear_progress().bind_value_from(
-                        lambda: self.plugin.current_stats["cpu"]
-                    )
-                    ui.markdown("Memory usage: ")
-                    memory_progress = ui.linear_progress().bind_value_from(
-                        lambda: self.plugin.current_stats["memory"]
-                        / self.plugin.current_stats["memory_limit"]
-                    )
-                    ui.markdown("Disk usage: ")
-                    disk_progress = ui.linear_progress().bind_value_from(
-                        lambda: self.plugin.current_stats["disk"] / disk
-                    )
-                ui.separator()
-                with ui.row():
-                    ui.button(
-                        "UNINSTALL",
-                        color="secondary",
-                        on_click=lambda: self.uninstall_plugin(),
-                    )
-                    ui.button(
-                        "VIEW LOGS", color="secondary", on_click=lambda: self.get_logs()
-                    )
-                    ui.button(
-                        "EDIT", color="secondary", on_click=lambda: self.edit_env()
-                    )
-                    ui.button(
-                        "RESTART",
-                        color="secondary",
-                        on_click=lambda: self.restart_plugin(),
-                    )
-                    if self.plugin.repo:
-                        ui.button(
-                            "UPDATE",
-                            color="secondary",
-                            on_click=lambda: self.plugin.update(),
+                
+                with ui.card_section().classes('w-full'):
+                    with ui.grid(columns=2).classes("w-full text-base font-light items-center"):
+                        ui.label("CPU usage: ")
+                        ui.linear_progress().bind_value_from(lambda: self.plugin.current_stats["cpu"])
+                        
+                        ui.label("Memory usage: ")
+                        ui.linear_progress().bind_value_from(
+                            lambda: self.plugin.current_stats["memory"] / self.plugin.current_stats["memory_limit"]
                         )
-
+                        
+                        ui.label("Disk usage: ")
+                        ui.linear_progress().bind_value_from(
+                            lambda: self.plugin.current_stats["disk"] / disk
+                        )
+                    
+                ui.separator()
+                
+                with ui.card_section().classes('w-full'):
+                    with ui.grid(rows=2, columns=2):
+                        if self.plugin.repo:
+                            ui.button("EDIT", color='secondary', on_click=lambda: self.edit_env())
+                            ui.button("UPDATE", color='secondary', on_click=lambda: self.plugin.update())
+                            ui.button("VIEW LOGS", color='secondary', on_click=lambda: self.get_logs())
+                            ui.button("RESTART", color='secondary', on_click=lambda: self.restart_plugin())
+                        else:
+                            ui.button("EDIT", color='secondary', on_click=lambda: self.edit_env())
+                            ui.button("VIEW LOGS", color='secondary', on_click=lambda: self.get_logs())
+                            ui.button("RESTART", color='secondary', on_click=lambda: self.restart_plugin()).classes('col-span-2')
+                        
+            else:
+                ui.space()
+                with ui.card_section().classes('w-full'):
+                    if self.plugin.repo:
+                        with ui.grid(rows=2, columns=2):
+                            ui.button("EDIT", color='secondary', on_click=lambda: self.edit_env())
+                            ui.button("UPDATE", color='secondary', on_click=lambda: self.plugin.update())
+                            ui.button("UNINSTALL", color='negative', on_click=lambda: self.uninstall_plugin()).classes('col-end-[span_2]')
+                    else:
+                        with ui.grid(columns=2):
+                            ui.button("EDIT", color='secondary', on_click=lambda: self.edit_env())
+                            ui.button("UNINSTALL", color='negative', on_click=lambda: self.uninstall_plugin()).classes('col-end-[span_2]')
+                    
     def update_status(self):
         status = self.plugin.get_status()
         if isinstance(status, dict):
@@ -143,9 +151,12 @@ class PluginInstalledCard:
         if status == 'stopped':
             self.on = False
             self.label_status.classes('text-[#BF5234]')
+        else:
+            self.label_status.classes(remove='text-[#BF5234]')
 
     def uninstall_plugin(self):
         self.plugin.uninstall()
+        
 
     def get_logs(self):
         logs_list = self.plugin.get_logs()
