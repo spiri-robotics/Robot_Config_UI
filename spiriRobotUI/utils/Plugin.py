@@ -78,7 +78,6 @@ class Plugin:
 
     def uninstall(self):
         if self.is_installed:
-            print(self.is_running)
             if self.is_running:
                 ui.notify('Please disable plugin before uninstalling', type='negative')
                 return False
@@ -219,9 +218,7 @@ class InstalledPlugin(Plugin):
 
     def uninstall(self):
         if self.is_running:
-            ui.notify(
-                f"Error: {self.name} is running. Please stop it before uninstalling."
-            )
+            ui.notify(f"Please disable plugin before uninstalling", type='negative')
         else:
             super().uninstall()
 
