@@ -44,8 +44,6 @@ async def system_ui():
                         for i, freq in enumerate(freqs):
                             ui.label(f'Core {i+1}: ').classes('text-base')
                             ui.label(f'{cpu_percent[i]}% ({freq.current:.0f}MHz)').classes('text-base')
-                            # amt = BindableObject(cpu_percent[i]/100)
-                            # ui.linear_progress(size='20px', show_value=False, color='secondary').props('track-color=blue-grey-2').bind_value_from(amt, 'value')
                     ui.label(f"🕒 {datetime.datetime.now().strftime('%H:%M:%S')}")
 
                 # Memory Card

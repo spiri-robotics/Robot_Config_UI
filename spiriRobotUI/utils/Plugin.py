@@ -78,6 +78,9 @@ class Plugin:
 
     def uninstall(self):
         if self.is_installed:
+            if self.is_running:
+                ui.notify('Please disable plugin before uninstalling', type='negative')
+                return False
             try:
                 shutil.rmtree(SERVICES / self.folder_name)
             except OSError as e:
@@ -166,6 +169,7 @@ class InstalledPlugin(Plugin):
                 )
                 return
             self.is_running = True
+            plugins[self.name].is_running = True
             event_bus.emit("plugin_run", self.name)
             print(f"{self.name} is running")
         else:
@@ -205,6 +209,7 @@ class InstalledPlugin(Plugin):
                 logger.debug("Waiting for containers to stop...")
 
             self.is_running = False
+            plugins[self.name].is_running = False
             self._containers = []
             event_bus.emit("plugin_run", self.name)
             print(f"{self.name} stopped")
@@ -213,9 +218,7 @@ class InstalledPlugin(Plugin):
 
     def uninstall(self):
         if self.is_running:
-            ui.notify(
-                f"Error: {self.name} is running. Please stop it before uninstalling."
-            )
+            ui.notify(f"Please disable plugin before uninstalling", type='negative')
         else:
             super().uninstall()
 
