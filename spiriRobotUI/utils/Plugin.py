@@ -1,19 +1,19 @@
+import asyncio, docker, git, shutil, subprocess, time, re
+
 from pathlib import Path
-import subprocess
-import shutil
-import docker
-import git
 from nicegui import ui
+from loguru import logger
+
 from spiriRobotUI.settings import PROJECT_ROOT
 from spiriRobotUI.utils.EventBus import event_bus
-from loguru import logger
-import time
-import asyncio
 
 SERVICES = Path("/services/")
+REPOS = PROJECT_ROOT / 'repos'
+if not REPOS.exists():
+    REPOS.mkdir()
 
+plugins = {}
 installed_plugins = {}
-
 
 class Plugin:
     """Base class for all plugins"""
@@ -52,6 +52,17 @@ class Plugin:
                 if not env_file.exists():
                     with open(env_file, "w") as f:
                         f.write("# Default environment variables\n")
+                        compose_file = SERVICES / self.folder_name / "docker-compose.yaml"
+                        if not compose_file.exists():
+                            compose_file = SERVICES / self.folder_name / "docker-compose.yml"
+                            if not compose_file.exists():
+                                ui.notify(f"{compose_file} not found!", type="error")
+                        compose_text = compose_file.read_text()
+                        variables = set(re.findall(r'\$[{]?([A-Z_][A-Z0-9_]*)[}]?', compose_text))
+
+                        for var in variables:
+                            logger.debug(f"Detected variable: {var}")
+                            f.write(f"{var}=\n")
             except shutil.Error as e:
                 print(f"Error copying folder: {e}")
             except OSError as e:
@@ -89,19 +100,6 @@ class Plugin:
         else:
             return ""
 
-
-plugins = {}
-
-for repo in (PROJECT_ROOT / "repos").iterdir():
-    for plugin in (PROJECT_ROOT / "repos" / repo.name / "services").iterdir():
-        logo = (
-            PROJECT_ROOT / "repos" / repo.name / "services" / plugin.name / "logo.jpg"
-        )
-        if not logo.exists():
-            logo = "spiriRobotUI/icons/cat_icon.jpg"
-        plugins[plugin.name] = Plugin(plugin.name, str(logo), repo.name, plugin.name)
-
-
 class InstalledPlugin(Plugin):
 
     def __init__(self, name, logo, repo, folder_name):
@@ -133,7 +131,7 @@ class InstalledPlugin(Plugin):
             return "stopped"
         self.update_containers()
         if len(self._containers) == 0:
-            return "stopped"
+            return "Loading..."
         container_states = [c.status for c in self._containers]
         states = {
             "Running": container_states.count("running"),
@@ -259,6 +257,9 @@ class InstalledPlugin(Plugin):
 
     def update(self):
         if self.is_installed:
+            if self.repo is None:
+                print(f"Error: {self.name} does not have a repository to update from.")
+                return
             repo_path = str(PROJECT_ROOT) + "/repos/" + self.repo
 
             try:
@@ -271,8 +272,13 @@ class InstalledPlugin(Plugin):
                 # Perform the pull operation
                 pull_info = origin.pull()
 
-                app_path = Path("repos") / self.repo / "services" / self.folder_name
-                shutil.copytree(app_path, SERVICES / self.folder_name)
+                app_path = Path(repo_path) / "services" / self.folder_name
+                dest_path = SERVICES / self.folder_name
+                # Remove the existing destination directory if it exists
+                if dest_path.exists():
+                    shutil.rmtree(dest_path)
+                # Copy updated files over
+                shutil.copytree(app_path, dest_path)
 
                 print(f"Successfully pulled changes from origin. Details: {pull_info}")
 
@@ -311,9 +317,6 @@ class InstalledPlugin(Plugin):
             print(f"Error updating .env file: {e}")
 
     def get_current_stats(self):
-        if not self.is_running:
-            print(f"{self.name} is not running. Cannot fetch stats.")
-            return
         self.update_containers()
         if len(self._containers) == 0:
             print(f"No running container found for {self.folder_name}")
@@ -371,17 +374,3 @@ class InstalledPlugin(Plugin):
         while self.is_running:
             self.get_current_stats()
             await asyncio.sleep(1)
-
-
-# Scan the SERVICES directory and register installed plugins.
-for service_dir in SERVICES.iterdir():
-    if service_dir.is_dir():
-        for plugin in plugins.values():
-            if (
-                service_dir.name == plugin.folder_name
-                and plugin.name not in installed_plugins
-            ):
-                plugin.is_installed = True
-                installed_plugins[plugin.name] = InstalledPlugin(
-                    plugin.name, plugin.logo, plugin.repo, plugin.folder_name
-                )

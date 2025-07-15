@@ -3,71 +3,53 @@ from nicegui import ui
 from spiriRobotUI.components.Header import header
 from spiriRobotUI.components.PluginCard import PluginBrowserCard, PluginInstalledCard
 from spiriRobotUI.components.Sidebar import sidebar
-from spiriRobotUI.utils.Plugin import plugins, installed_plugins
-from spiriRobotUI.utils.plugin_utils import load_plugins
 from spiriRobotUI.utils.EventBus import event_bus
+from spiriRobotUI.utils.Plugin import plugins, installed_plugins
+from spiriRobotUI.utils.plugins_page_utils import (
+    browser_cards, installed_cards, 
+    register_plugins, register_installed, 
+    create_browser_cards, update_installed_cards, 
+    browser_grid_ui, installed_grid_ui
+)
+from spiriRobotUI.utils.repo_utils import display_repos, add_repository
 from spiriRobotUI.utils.styles import styles
-from spiriRobotUI.utils.repo_utils import display_repos
-
-browser_cards = {}
-installed_cards = {}
-
-
-def create_browser_cards():
-    for plugin in plugins.values():
-        if plugin.name not in browser_cards.keys():
-            browser_cards[plugin.name] = PluginBrowserCard(plugin)
-
-
-def update_installed_cards():
-    for plugin in installed_plugins.values():
-        if plugin.name not in installed_cards.keys():
-            installed_cards[plugin.name] = PluginInstalledCard(plugin)
 
 
 @ui.page("/")
 async def main_ui():
     await styles()
     sidebar()
-    header()
-    ui.markdown("## Plug-in Coordinator")
-    ui.label("Your favourite plugins, now all in one place.")
+
+    with ui.row(align_items='end'):
+        header()
+        ui.markdown("## Plug-in Coordinator")
+    with ui.row(align_items='end').classes('w-full justify-between'):
+        ui.label("Your favourite plugins, now all in one place.").classes('text-xl font-light')
+        ui.button(
+            "Add Repository",
+            on_click=add_repository,
+            color="secondary",
+        )
 
     ui.separator()
 
-    load_plugins()
+    register_plugins()
+    register_installed()
+    
     create_browser_cards()
     update_installed_cards()
-
-    with ui.tabs().classes("w-full") as tabs:
-        one = ui.tab("Available")
-        two = ui.tab("Installed")
-    with ui.tab_panels(tabs, value=one).classes("w-full"):
+    
+    with ui.tabs().classes('w-full') as tabs:
+        one = ui.tab('Available')
+        two = ui.tab('Installed')
+        three = ui.tab('Repositories')
+    with ui.tab_panels(tabs, value=one).classes('w-full bg-transparent').props('animated=false'):
         with ui.tab_panel(one):
             browser_grid_ui()
         with ui.tab_panel(two):
             await installed_grid_ui()
-
-    display_repos()
-
-
-@ui.refreshable
-def browser_grid_ui():
-    with ui.grid().classes("grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4"):
-        for card in browser_cards.values():
-            card.render()
-
-
-@ui.refreshable
-async def installed_grid_ui():
-    if len(installed_plugins) == 0:
-        ui.label(
-            "No plugins installed yet. Please visit the 'Available' tab to install plugins."
-        )
-    else:
-        with ui.grid().classes("grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4"):
-            for card in installed_cards.values():
-                await card.render()
+        with ui.tab_panel(three):
+            display_repos()
 
 
 def on_plugin_installed(plugin_name: str):
@@ -80,8 +62,9 @@ def on_plugin_installed(plugin_name: str):
 def on_plugin_uninstalled(plugin_name: str):
     if plugin_name in installed_cards.keys():
         del installed_cards[plugin_name]
-    browser_cards[plugin_name].render.refresh()
     installed_grid_ui.refresh()
+    plugins[plugin_name].is_installed = False
+    browser_cards[plugin_name].render.refresh()
 
 
 def on_plugin_run(plugin_name: str):
