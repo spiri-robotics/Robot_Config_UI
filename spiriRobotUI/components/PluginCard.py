@@ -1,8 +1,9 @@
 from nicegui import ui, Client
-
+import asyncio
 from spiriRobotUI.components.PluginDialog import PluginDialog
 from spiriRobotUI.components.ToggleButton import ToggleButton
 from spiriRobotUI.utils.Plugin import InstalledPlugin, Plugin
+from spiriRobotUI.utils.EventBus import event_bus
 from spiriRobotUI.utils.styles import style_vars
 from spiriRobotUI.utils.system_utils import disk
 
@@ -48,12 +49,36 @@ class PluginInstalledCard:
     def __init__(self, plugin: InstalledPlugin):
         self.base_card_classes = ""
         self.plugin = plugin
+        self.cpu_prog = 0.0
+        self.mem_prog = 0.0
+        self.disk_prog = 0.0
         self.chips = {}
+        self.polling_task = None
+
+    async def start_stats_polling(self, interval=2):
+        try:
+            while self.plugin.is_running:
+                print("Polling")
+                self.plugin.get_current_stats()
+                self.update_stats_ui(self.plugin.current_stats)
+                await asyncio.sleep(interval)
+        except asyncio.CancelledError:
+            print("Polling dead.")
+        finally:
+            self.polling_task = None
 
     @ui.refreshable
     async def render(self):
         if self.plugin.is_running:
-            self.plugin.get_current_stats()
+            self.plugin.get_current_stats()    
+        if self.polling_task and not self.polling_task.done():
+            self.polling_task.cancel()
+            try:
+                await self.polling_task
+            except asyncio.CancelledError:
+                print("Polling task cancelled.")
+        if self.plugin.is_running:
+            self.polling_task = asyncio.create_task(self.start_stats_polling())
         
         with ui.card().tight().classes(f"w-80"):
             with ui.card_section().classes('w-full'):
@@ -90,22 +115,8 @@ class PluginInstalledCard:
                 self.update_status()
                 
                 ui.separator()
-                
                 with ui.card_section().classes('w-full'):
-                    with ui.grid(columns=2).classes("w-full text-base font-light items-center"):
-                        ui.label("CPU usage: ")
-                        ui.linear_progress().bind_value_from(lambda: self.plugin.current_stats["cpu"])
-                        
-                        ui.label("Memory usage: ")
-                        ui.linear_progress().bind_value_from(
-                            lambda: self.plugin.current_stats["memory"] / self.plugin.current_stats["memory_limit"]
-                        )
-                        
-                        ui.label("Disk usage: ")
-                        ui.linear_progress().bind_value_from(
-                            lambda: self.plugin.current_stats["disk"] / disk
-                        )
-                    
+                    await self.render_stats()
                 ui.separator()
                 
                 with ui.card_section().classes('w-full'):
@@ -133,6 +144,16 @@ class PluginInstalledCard:
                             ui.button("EDIT", color='secondary', on_click=lambda: self.edit_env())
                             ui.button("UNINSTALL", color='negative', on_click=lambda: self.uninstall_plugin()).classes('col-end-[span_2]')
                     
+    @ui.refreshable
+    async def render_stats(self):
+        with ui.grid(columns=2).classes("w-full text-base font-light items-center"):
+            ui.markdown("CPU usage:")
+            ui.linear_progress().bind_value(self, 'cpu_prog')
+            ui.markdown("Memory usage:")
+            ui.linear_progress().bind_value(self, 'mem_prog')
+            ui.markdown("Disk usage:")
+            ui.linear_progress().bind_value(self, 'disk_prog')
+
     def update_status(self):
         status = self.plugin.get_status()
         if isinstance(status, dict):
@@ -203,6 +224,12 @@ class PluginInstalledCard:
                     ui.button("Close", color="secondary", on_click=dialog.close)
         dialog.open()
 
+    def update_stats_ui(self, stats):
+        self.cpu_prog = stats['cpu'] / 100
+        self.mem_prog = stats['memory'] / stats['memory_limit']
+        self.disk_prog = stats['disk'] / 100
+        self.render_stats.refresh()
+    
     async def restart_plugin(self):
         await self.plugin.stop()
         print(self.plugin.is_running)
