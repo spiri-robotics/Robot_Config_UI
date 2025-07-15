@@ -1,8 +1,9 @@
 from nicegui import ui
-
+import asyncio
 from spiriRobotUI.components.PluginDialog import PluginDialog
 from spiriRobotUI.components.ToggleButton import ToggleButton
 from spiriRobotUI.utils.Plugin import InstalledPlugin, Plugin
+from spiriRobotUI.utils.EventBus import event_bus
 from spiriRobotUI.utils.styles import DARK_MODE
 from spiriRobotUI.utils.system_utils import disk
 
@@ -50,11 +51,35 @@ class PluginInstalledCard:
     def __init__(self, plugin: InstalledPlugin):
         self.base_card_classes = ""
         self.plugin = plugin
+        self.cpu_prog = 0.0
+        self.mem_prog = 0.0
+        self.disk_prog = 0.0
         self.chips = {}
+        self.polling_task = None
+
+    async def start_stats_polling(self, interval=2):
+        try:
+            while self.plugin.is_running:
+                print("Polling")
+                self.plugin.get_current_stats()
+                self.update_stats_ui(self.plugin.current_stats)
+                await asyncio.sleep(interval)
+        except asyncio.CancelledError:
+            print("Polling dead.")
+        finally:
+            self.polling_task = None
 
     @ui.refreshable
     async def render(self):
-        self.plugin.get_current_stats()
+        self.plugin.get_current_stats()    
+        if self.polling_task and not self.polling_task.done():
+            self.polling_task.cancel()
+            try:
+                await self.polling_task
+            except asyncio.CancelledError:
+                print("Polling task cancelled.")
+        if self.plugin.is_running:
+            self.polling_task = asyncio.create_task(self.start_stats_polling())
         installed_card = ui.card().classes(f"{self.base_card_classes}")
         if DARK_MODE:
             installed_card.classes(f"dark-card")
@@ -86,20 +111,7 @@ class PluginInstalledCard:
                     self.chips["Dead"] = ui.chip("", color='dead', text_color='white')
                 self.update_status()
                 ui.separator()
-                with ui.grid(columns=2).classes("w-full text-xl"):
-                    ui.markdown("CPU usage: ")
-                    cpu_progress = ui.linear_progress().bind_value_from(
-                        lambda: self.plugin.current_stats["cpu"]
-                    )
-                    ui.markdown("Memory usage: ")
-                    memory_progress = ui.linear_progress().bind_value_from(
-                        lambda: self.plugin.current_stats["memory"]
-                        / self.plugin.current_stats["memory_limit"]
-                    )
-                    ui.markdown("Disk usage: ")
-                    disk_progress = ui.linear_progress().bind_value_from(
-                        lambda: self.plugin.current_stats["disk"] / disk
-                    )
+                await self.render_stats()
                 ui.separator()
                 with ui.row():
                     ui.button(
@@ -123,6 +135,16 @@ class PluginInstalledCard:
                         color="secondary",
                         on_click=lambda: self.plugin.update(),
                     )
+
+    @ui.refreshable
+    async def render_stats(self):
+        with ui.grid(columns=2).classes("w-full text-xl"):
+            ui.markdown("CPU usage:")
+            ui.linear_progress().bind_value(self, 'cpu_prog')
+            ui.markdown("Memory usage:")
+            ui.linear_progress().bind_value(self, 'mem_prog')
+            ui.markdown("Disk usage:")
+            ui.linear_progress().bind_value(self, 'disk_prog')
 
     def update_status(self):
         status = self.plugin.get_status()
@@ -191,6 +213,12 @@ class PluginInstalledCard:
                     ui.button("Close", color="secondary", on_click=dialog.close)
         dialog.open()
 
+    def update_stats_ui(self, stats):
+        self.cpu_prog = stats['cpu'] / 100
+        self.mem_prog = stats['memory'] / stats['memory_limit']
+        self.disk_prog = stats['disk'] / 100
+        self.render_stats.refresh()
+    
     async def restart_plugin(self):
         await self.plugin.stop()
         print(self.plugin.is_running)
