@@ -115,7 +115,8 @@ class PluginInstalledCard:
                 self.update_status()
                 
                 ui.separator()
-                await self.render_stats()
+                with ui.card_section().classes('w-full'):
+                    await self.render_stats()
                 ui.separator()
                 
                 with ui.card_section().classes('w-full'):
@@ -145,7 +146,7 @@ class PluginInstalledCard:
                     
     @ui.refreshable
     async def render_stats(self):
-        with ui.grid(columns=2).classes("w-full text-xl"):
+        with ui.grid(columns=2).classes("w-full text-base font-light items-center"):
             ui.markdown("CPU usage:")
             ui.linear_progress().bind_value(self, 'cpu_prog')
             ui.markdown("Memory usage:")
