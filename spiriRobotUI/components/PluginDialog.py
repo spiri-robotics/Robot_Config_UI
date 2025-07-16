@@ -12,15 +12,16 @@ class PluginDialog:
 
     def generate_dialog(self):
         with ui.dialog() as self.dialog, ui.card().classes(
-            f"items-left h-1/2 w-full shadow-[{style_vars['flex-shadow']}]"
+            f"items-left h-1/2 w-full"
         ):
             with ui.row().classes("w-full justify-between items-center"):
                 ui.image(self.plugin.logo).classes("w-24 h-24 rounded")
                 with ui.card().classes(
-                    f"w-3/4 h-24 items-center justify-center shadow-[{style_vars['flex-shadow']}]"
+                    f"h-24 items-center justify-center shadow-[{style_vars['flex-shadow']}]"
                 ):
-                    with ui.row().classes("w-full justify-between"):
-                        ui.label(self.plugin.name.title()).classes("text-3xl font-light")
+                    with ui.row().classes("w-full justify-between items-center"):
+                        ui.label(self.plugin.name.title()).classes("text-[2.1rem] font-light")
+                        ui.space()
                         self.install_toggle = ToggleButton(
                             on_label="Install",
                             off_label="Uninstall",
@@ -31,4 +32,4 @@ class PluginDialog:
                             off_color="warning",
                         )
             with ui.column().classes("w-full"):
-                ui.markdown(self.plugin.readme_contents)
+                ui.markdown(self.plugin.readme_contents).classes('text-base')

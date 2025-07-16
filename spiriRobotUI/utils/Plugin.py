@@ -101,7 +101,7 @@ class Plugin:
                 readme_contents = f.read()
             return readme_contents
         else:
-            return ""
+            return "No description available."
 
 class InstalledPlugin(Plugin):
 
