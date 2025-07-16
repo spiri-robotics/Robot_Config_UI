@@ -42,8 +42,8 @@ class ToggleButton(ui.button):
                 result = self.off_switch()
         if (result != False):
             self.state = not self.state
-            self.props(remove='loading')
-            self.update()
+        self.props(remove='loading')
+        self.update()
 
     def update(self) -> None:
         self.color = self.on_color if self.state else self.off_color

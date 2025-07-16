@@ -4,7 +4,8 @@ from nicegui import app, ui
 
 from spiriRobotUI.components.Header import header
 from spiriRobotUI.components.Sidebar import sidebar
-from spiriRobotUI.utils.styles import styles
+from spiriRobotUI.utils.BindableObject import BindableObject
+from spiriRobotUI.utils.styles import styles, style_vars
 
 def format_bytes(bytes_val):
     return f"{bytes_val / (1024 ** 3):.1f} GB"
@@ -35,7 +36,7 @@ async def system_ui():
         network_tab = ui.tab('NETWORK')
         about_tab = ui.tab('ABOUT')
 
-    with ui.tab_panels(tabs, value=system_tab).classes('w-full'):
+    with ui.tab_panels(tabs, value=system_tab).classes('w-full bg-transparent').props('animated=false'):
         with ui.tab_panel(system_tab):
             ui.markdown("## 🖥️ System Monitor")
             sys_monitor_ui()
