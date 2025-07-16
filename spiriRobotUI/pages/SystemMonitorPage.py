@@ -19,7 +19,9 @@ system_stats = {
     'mem_total': psutil.virtual_memory().total,
     'swap_used': psutil.swap_memory().used,
     'swap_total': psutil.swap_memory().total,
-    'disk': psutil.disk_usage('/'),
+    'disk_percent': psutil.disk_usage('/').percent,
+    'disk_used': psutil.disk_usage('/').used,
+    'disk_total':  psutil.disk_usage('/').total,
     'temps': psutil.sensors_temperatures(),
     'core_temps': None
 }
@@ -54,13 +56,13 @@ async def system_ui():
 
 @ui.refreshable
 def sys_monitor_ui():
-    with ui.row().classes('w-full justify-around'):
+    with ui.grid(columns=3, rows=2).classes('w-full'):
 
         # CPU Card
-        with ui.card().classes('w-1/2 bg-gray-900 text-white'):
-            ui.label().bind_text_from(system_stats, 'cpu_percent', backward=lambda stats: f"🧠 {stats:.1f}%").classes('text-3xl font-bold text-center text-blue-400')
+        with ui.card().classes('row-span-2'):
+            ui.label().bind_text_from(system_stats, 'cpu_percent', backward=lambda stats: f"🧠 CPU: {stats:.1f}%").classes('text-3xl font-bold text-[#274c77] dark:text-[#9EDFEC]')
             info = cpuinfo.get_cpu_info()
-            ui.label(f"{info['brand_raw']}").classes('text-sm')
+            ui.label(f"{info['brand_raw']}").classes('text-base')
             with ui.grid(columns=2):
                 for i, freq in enumerate(system_stats['cpu_freq']):
                     ui.label(f'Core {i+1}: ').classes('text-base')
@@ -69,38 +71,36 @@ def sys_monitor_ui():
                         'core_percents',
                         backward=lambda stats, freq=freq, i=i: f'{stats[i]}% ({freq.current:.0f}MHz)'
                     ).classes('text-base')
-
+                    
         # Memory Card
-        with ui.card().classes('w-1/2 bg-gray-900 text-white'):
-            ui.label().bind_text_from(system_stats, 'mem_percent', backward=lambda stats: f"💾 {stats:.1f}%").classes('text-3xl font-bold text-center text-blue-400')
-            ui.label("Memory").classes('text-sm')
+        with ui.card():
+            ui.label().bind_text_from(system_stats, 'mem_percent', backward=lambda stats: f"💾 Memory: {stats:.1f}%").classes('text-3xl font-bold text-[#274c77] dark:text-[#9EDFEC]')
             ui.label().bind_text_from(system_stats, 'mem_used', backward=lambda stats: f"RAM: {format_bytes(stats)} / {format_bytes(system_stats['mem_total'])}")
             ui.label().bind_text_from(system_stats, 'swap_used', backward=lambda stats: f"SWAP: {format_bytes(stats)} / {format_bytes(system_stats['swap_total'])}")
 
-    with ui.row().classes('w-full justify-around mt-4'):
-
-        # Disk Card
-        with ui.card().classes('w-1/2 bg-gray-900 text-white'):
-            disk = psutil.disk_usage('/')
-            ui.label().bind_text_from(system_stats, 'disk', backward=lambda stats: f"🗄️ {stats.percent:.1f}%").classes('text-3xl font-bold text-center text-blue-400')
-            ui.label("Disk").classes('text-sm')
-            ui.label().bind_text_from(system_stats, 'disk', backward=lambda stats: f"{format_bytes(stats.used)} / {format_bytes(stats.total)} used")
 
         # Temperature Card (with fallback)
-        with ui.card().classes('w-1/2 bg-gray-900 text-white'):
-            ui.label("🌡️ Loading.. °C").classes('text-3xl font-bold text-center text-blue-400')
+        with ui.card().classes('row-span-2'):
+            ui.label("🌡️ Core Temperature").classes('text-3xl font-bold text-[#274c77] dark:text-[#9EDFEC]')
             try:
                 if system_stats['core_temps'] != None:
                     for idx, t in enumerate(system_stats['core_temps']):
-                        ui.label().bind_text_from(system_stats, 'core_temps', backward=lambda stats, idx=idx, t=t: f"{t.label}: {stats[idx].current:.1f}°C")
+                        ui.label().bind_text_from(system_stats, 'core_temps', backward=lambda stats, idx=idx, t=t: f"{t.label}: {stats[idx].current:.1f}°C").classes('text-base')
                 elif system_stats['temps']:
                     for label, sensors in system_stats['temps'].items():
                         for idx, t in enumerate(sensors):
-                            ui.label().bind_text_from(system_stats, 'temps', backward=lambda stats, label=label, idx=idx, t=t: f"{label} {t.label}: {stats[label][idx].current:.1f}°C")
+                            ui.label().bind_text_from(system_stats, 'temps', backward=lambda stats, label=label, idx=idx, t=t: f"{label} {t.label}: {stats[label][idx].current:.1f}°C").classes('text-base')
                 else:
-                    ui.label("Temperature data not available")
+                    ui.label("Temperature data not available").classes('text-base')
             except Exception as e:
-                ui.label(f"Temperature sensors unavailable {e}").classes('text-xs')
+                ui.label(f"Temperature sensors unavailable {e}").classes('text-base')
+        
+        # Disk Card
+        with ui.card():
+            disk = psutil.disk_usage('/')
+            ui.label().bind_text_from(system_stats, 'disk_percent', backward=lambda stats: f"🗄️ Disk: {stats:.1f}%").classes('text-3xl font-bold text-[#274c77] dark:text-[#9EDFEC]')
+            ui.label("Disk").classes('text-sm')
+            ui.label().bind_text_from(system_stats, 'disk_used', backward=lambda stats: f"{format_bytes(stats)} / {format_bytes(system_stats['disk_total'])} used").classes('text-base')
 
 async def system_stats_polling():
     global system_stats
@@ -111,7 +111,8 @@ async def system_stats_polling():
             'mem_percent': psutil.virtual_memory().percent,
             'mem_used': psutil.virtual_memory().used,
             'swap_used': psutil.swap_memory().used,
-            'disk': psutil.disk_usage('/'),
+            'disk_percent': psutil.disk_usage('/').percent,
+            'disk_used': psutil.disk_usage('/').used,
             'temps': psutil.sensors_temperatures(),
             'core_temps': None if system_stats['core_temps'] == None else system_stats['temps']["coretemp"]
         }
