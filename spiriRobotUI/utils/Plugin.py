@@ -33,18 +33,16 @@ class Plugin:
             try:
                 dest_path = SERVICES / self.folder_name
                 if dest_path.exists():
-                    print(f"Error: {self.name} already installed.")
+                    logger.error(f"Error: {self.name} already installed.")
                     self.is_installed = True
-                    if self.name in installed_plugins:
-                        print(f"{self.name} is already in installed plugins.")
-                    else:
+                    if self.name not in installed_plugins:
                         installed_plugins[self.name] = InstalledPlugin(
                             self.name, self.logo, self.repo, self.folder_name
                         )
                     return
 
                 app_path = Path("repos") / self.repo / "services" / self.folder_name
-                print(f"Installing {self.name} from {app_path}")
+                logger.debug(f"Installing {self.name} from {app_path}")
                 shutil.copytree(app_path, SERVICES / self.folder_name)
 
                 # Add a default .env if one doesn't exist in the destination
@@ -56,7 +54,7 @@ class Plugin:
                         if not compose_file.exists():
                             compose_file = SERVICES / self.folder_name / "docker-compose.yml"
                             if not compose_file.exists():
-                                ui.notify(f"{compose_file} not found!", type="error")
+                                ui.notify(f"{compose_file} not found!", type="negative")
                         compose_text = compose_file.read_text()
                         variables = set(re.findall(r'\$[{]?([A-Z_][A-Z0-9_]*)[}]?', compose_text))
 
@@ -64,17 +62,17 @@ class Plugin:
                             logger.debug(f"Detected variable: {var}")
                             f.write(f"{var}=\n")
             except shutil.Error as e:
-                print(f"Error copying folder: {e}")
+                logger.error(f"Error copying folder: {e}")
             except OSError as e:
-                print(f"OS Error: {e}")
+                logger.error(f"OS Error: {e}")
             installed_plugins[self.name] = InstalledPlugin(
                 self.name, self.logo, self.repo, self.folder_name
             )
             self.is_installed = True
-            print(f"{self.name} installed")
+            logger.success(f"{self.name} installed")
+            event_bus.emit("plugin_installed", self.name)
         else:
-            print(f"Error: {self.name} already installed")
-        event_bus.emit("plugin_installed", self.name)
+            logger.error(f"Error: {self.name} already installed")
 
     def uninstall(self):
         if self.is_installed:
@@ -84,18 +82,18 @@ class Plugin:
             try:
                 shutil.rmtree(SERVICES / self.folder_name)
             except OSError as e:
-                print(f"Error removing folder: {e}")
+                logger.error(f"Error removing folder: {e}")
             except Exception as e:
-                print(f"Unexpected error: {e}")
+                logger.error(f"Unexpected error: {e}")
             installed_plugins.pop(self.name, None)
             self.is_installed = False
-            print(f"{self.name} uninstalled")
+            logger.success(f"{self.name} uninstalled")
+            event_bus.emit("plugin_uninstalled", self.name)
         else:
-            print(f"Error: {self.name} not installed")
-        event_bus.emit("plugin_uninstalled", self.name)
+            logger.error(f"Error: {self.name} not installed")
 
     def get_readme_contents(self):
-        path = f"repos/{self.repo}/services/{self.name}/README.md"
+        path = f"repos/{self.repo}/services/{self.folder_name}/README.md"
         if Path(path).exists():
             with open(path, "r") as f:
                 readme_contents = f.read()
@@ -147,7 +145,7 @@ class InstalledPlugin(Plugin):
         return states
     
     async def run(self):
-        print(f"Running {self.name}...")
+        logger.debug(f"Running {self.name}...")
         if not self.is_running:
             try:
                 subprocess.Popen(
@@ -159,21 +157,21 @@ class InstalledPlugin(Plugin):
                 await asyncio.sleep(2)
                 self.update_containers()
                 if len(self._containers) == 0:
-                    print(f"No running containers found for {self.folder_name}")
+                    logger.info(f"No running containers found for {self.folder_name}")
             except subprocess.CalledProcessError as e:
-                print(f"Failed: {e}")
+                logger.error(f"Failed: {e}")
                 return
             except FileNotFoundError:
-                print(
-                    "Error: Docker Compose not found. Please ensure Docker is installed and running."
+                logger.error(
+                    "Error: Docker Compose not found. Please ensure Docker is installed and running"
                 )
                 return
             self.is_running = True
             plugins[self.name].is_running = True
             event_bus.emit("plugin_run", self.name)
-            print(f"{self.name} is running")
+            logger.success(f"{self.name} is running")
         else:
-            print(f"Error: {self.name} is already running")
+            logger.error(f"Error: {self.name} is already running")
 
     async def stop(self):
         if self.is_running:
@@ -185,7 +183,7 @@ class InstalledPlugin(Plugin):
                     stderr=subprocess.PIPE,
                 )
             except subprocess.CalledProcessError as e:
-                print(f"Failed: {e}")
+                logger.error(f"Failed: {e}")
 
             while True:
                 all_stopped = True
@@ -212,19 +210,20 @@ class InstalledPlugin(Plugin):
             plugins[self.name].is_running = False
             self._containers = []
             event_bus.emit("plugin_run", self.name)
-            print(f"{self.name} stopped")
+            logger.success(f"{self.name} stopped")
         else:
-            print(f"Error: {self.name} is not running")
+            logger.error(f"Error: {self.name} is not running")
 
     def uninstall(self):
         if self.is_running:
-            ui.notify(f"Please disable plugin before uninstalling", type='negative')
+            logger.error('Error: please disable plugin before uninstalling')
+            ui.notify("Please disable plugin before uninstalling", type='negative')
         else:
             super().uninstall()
 
     def get_logs(self):
         if self.is_running:
-            print(f"Fetching logs for {self.name}")
+            logger.debug(f"Fetching logs for {self.name}")
             try:
                 self.update_containers()
                 logs_list = {}
@@ -246,23 +245,24 @@ class InstalledPlugin(Plugin):
                     logs_list[self._containers[i].name] = logs
                 return logs_list
             except docker.errors.NotFound:
-                print(f"Error: Container '{self.folder_name}' not found.")
+                logger.error(f"Error: Container '{self.folder_name}' not found.")
                 return {}
             except docker.errors.APIError as e:
-                print(f"Error interacting with Docker API: {e}")
+                logger.error(f"Error interacting with Docker API: {e}")
                 return {}
             except Exception as e:
-                print(f"An unexpected error occurred: {e}")
+                logger.error(f"An unexpected error occurred: {e}")
                 return {}
         else:
-            print(f"Error: {self.name} is not running. Cannot fetch logs.")
+            logger.error(f"Error: {self.name} is not running. Cannot fetch logs.")
             return {}
 
     def update(self):
         if self.is_installed:
             if self.repo is None:
-                print(f"Error: {self.name} does not have a repository to update from.")
+                logger.error(f"Error: {self.name} does not have a repository to update from.")
                 return
+            
             repo_path = str(PROJECT_ROOT) + "/repos/" + self.repo
 
             try:
@@ -283,14 +283,15 @@ class InstalledPlugin(Plugin):
                 # Copy updated files over
                 shutil.copytree(app_path, dest_path)
 
-                print(f"Successfully pulled changes from origin. Details: {pull_info}")
+                logger.success(f"Successfully pulled changes from origin") 
+                logger.info(f"Details: {pull_info}")
 
             except git.InvalidGitRepositoryError:
-                print(f"Error: '{repo_path}' is not a valid Git repository.")
+                logger.error(f"Error: '{repo_path}' is not a valid Git repository.")
             except Exception as e:
-                print(f"An error occurred during git pull: {e}")
+                logger.error(f"An error occurred during git pull: {e}")
         else:
-            print(f"Error: {self.name} is not installed. Cannot update.")
+            logger.error(f"Error: {self.name} is not installed. Cannot update.")
 
     def get_compose_file(self):
         compose_file_path = Path(SERVICES / self.folder_name / "docker-compose.yml")
@@ -298,7 +299,7 @@ class InstalledPlugin(Plugin):
             with open(compose_file_path, "r") as file:
                 return file.read()
         else:
-            print(f"Error: Docker Compose file not found at {compose_file_path}")
+            logger.error(f"Error: Docker Compose file not found at {compose_file_path}")
             return "File not found"
 
     def get_env(self):
@@ -307,22 +308,22 @@ class InstalledPlugin(Plugin):
             with open(env_file_path, "r") as file:
                 return file.read()
         else:
-            print(f"Error: .env file not found at {env_file_path}")
-            return ""
+            logger.error(f"Error: .env file not found at {env_file_path}")
+            return "File not found"
 
     def set_env(self, env_text):
         env_file_path = Path(SERVICES / self.folder_name / ".env")
         try:
             with open(env_file_path, "w") as file:
                 file.write(env_text)
-            print(f"Environment variables updated for {self.name}")
+            logger.success(f"Environment variables updated for {self.name}")
         except Exception as e:
-            print(f"Error updating .env file: {e}")
+            logger.error(f"Error updating .env file: {e}")
 
     def get_current_stats(self):
         self.update_containers()
         if len(self._containers) == 0:
-            print(f"No running container found for {self.folder_name}")
+            logger.info(f"No running container found for {self.folder_name}")
             return
         total_cpu = 0.0
         total_memory = 0.0
@@ -356,11 +357,12 @@ class InstalledPlugin(Plugin):
                         cpu_percent = (cpu_delta / system_delta) * len(percpu_usage)
                     total_cpu += cpu_percent
                 else:
-                    print(f"Warning: Missing CPU stats for container {container.name}")
+                    logger.warning(f"Warning: Missing CPU stats for container {container.name}")
                 # Memory stats
                 memory_stats = stats.get("memory_stats", {})
                 total_memory += memory_stats.get("usage", 0) / (1024**2)
                 total_memory_limit += memory_stats.get("limit", 0) / (1024**2)
+                
                 # If any container is not running, mark status as not running
                 if container.status != "running":
                     status = container.status
@@ -371,7 +373,7 @@ class InstalledPlugin(Plugin):
             self.current_stats["disk"] = 10  # Placeholder
             self.current_stats["status"] = status
         except Exception as e:
-            print(f"Error fetching stats: {e}")
+            logger.error(f"Error fetching stats: {e}")
 
     async def update_stats_periodically(self):
         while self.is_running:

@@ -1,5 +1,8 @@
-from nicegui import ui, Client
 import asyncio
+
+from nicegui import ui, Client
+from loguru import logger
+
 from spiriRobotUI.components.PluginDialog import PluginDialog
 from spiriRobotUI.components.ToggleButton import ToggleButton
 from spiriRobotUI.utils.Plugin import InstalledPlugin, Plugin
@@ -58,12 +61,12 @@ class PluginInstalledCard:
     async def start_stats_polling(self, interval=2):
         try:
             while self.plugin.is_running:
-                print("Polling")
+                logger.debug("Polling...")
                 self.plugin.get_current_stats()
                 self.update_stats_ui(self.plugin.current_stats)
                 await asyncio.sleep(interval)
         except asyncio.CancelledError:
-            print("Polling dead.")
+            logger.error("Polling dead.")
         finally:
             self.polling_task = None
 
@@ -76,7 +79,7 @@ class PluginInstalledCard:
             try:
                 await self.polling_task
             except asyncio.CancelledError:
-                print("Polling task cancelled.")
+                logger.error("Polling task cancelled.")
         if self.plugin.is_running:
             self.polling_task = asyncio.create_task(self.start_stats_polling())
         
@@ -232,5 +235,4 @@ class PluginInstalledCard:
     
     async def restart_plugin(self):
         await self.plugin.stop()
-        print(self.plugin.is_running)
         await self.plugin.run()

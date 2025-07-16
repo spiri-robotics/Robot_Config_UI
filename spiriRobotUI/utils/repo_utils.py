@@ -3,6 +3,7 @@ import shutil
 from nicegui import ui
 from git import Repo
 from pathlib import Path
+from loguru import logger
 
 from spiriRobotUI.settings import PROJECT_ROOT
 from spiriRobotUI.utils.plugins_page_utils import register_plugins, create_browser_cards, browser_grid_ui
@@ -53,7 +54,8 @@ async def add_repository():
         clone_path = repos_dir / repo_name
 
         if clone_path.exists():
-            ui.notify(f"Repository '{repo_name}' already exists.", type="warning")
+            logger.warning(f"Warning: repository {repo_name} already exists")
+            ui.notify(f"Repository '{repo_name}' already exists", type="warning")
             return
 
         try:
@@ -63,16 +65,19 @@ async def add_repository():
                 for plugin in (clone_path / "services").iterdir():
                     repo_plugins.append(plugin.name)
                 installed_repos.append({"name": repo_name, "plugins": repo_plugins})
-                ui.notify(f"Cloned {repo_name} into /repos")
+                logger.success(f'Cloned {repo_name} into repos directory')
+                ui.notify(f"Cloned {repo_name} into repos directory")
                 display_repos.refresh()
                 register_plugins()
                 create_browser_cards()
                 browser_grid_ui.refresh()
                 
             else:
-                ui.notify("Clone Failed.")
+                logger.error('Error: failed to create clone path')
+                ui.notify("Error cloning repo", type='negative')
         except Exception as e:
-            ui.notify(f"Error cloning repo: {e}", type="negative")
+            logger.error(f'Error cloning repo: {e}')
+            ui.notify("Error cloning repo", type="negative")
 
 
 def remove_repository(repo):
@@ -84,12 +89,15 @@ def remove_repository(repo):
     try:
         if repo_path.exists() and repo_path.is_dir():
             shutil.rmtree(repo_path)
-            ui.notify(f"Deleted repository: {repo['name']}")
+            logger.success(f'Repository {repo["name"]} deleted')
+            ui.notify(f"Repository {repo['name']} deleted", type='positive')
             display_repos.refresh()
             register_plugins()
             create_browser_cards()
             browser_grid_ui.refresh()
         else:
-            ui.notify(f"Repo directory not found: {repo_path}", type="warning")
+            logger.error(f'Error: repo directory {repo_path} not found')
+            ui.notify(f"Repo directory not found", type="negative")
     except Exception as e:
-        ui.notify(f"Error deleting repo: {e}", type="negative")
+        logger.error(f'Error deleting repo: {e}')
+        ui.notify(f"Error deleting repo", type="negative")
