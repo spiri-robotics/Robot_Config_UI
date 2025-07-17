@@ -1,4 +1,4 @@
-from nicegui import ui
+from nicegui import app, ui
 
 from spiriRobotUI.utils.Plugin import plugins, installed_plugins, Plugin, InstalledPlugin, REPOS, SERVICES
 from spiriRobotUI.components.PluginCard import PluginBrowserCard, PluginInstalledCard
@@ -73,3 +73,9 @@ async def installed_grid_ui():
         with ui.row(align_items='stretch').classes("w-full"):
             for card in installed_cards.values():
                 await card.render()
+                
+@app.on_shutdown
+def cleanup_plugin_polling():
+    for card in installed_cards.values():
+        if card.polling_task and not card.polling_task.done():
+            card.polling_task.cancel()

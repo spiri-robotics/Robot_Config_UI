@@ -1,4 +1,4 @@
-from nicegui import ui, Client
+from nicegui import app, ui, Client
 import asyncio
 from spiriRobotUI.components.PluginDialog import PluginDialog
 from spiriRobotUI.components.ToggleButton import ToggleButton
@@ -56,30 +56,17 @@ class PluginInstalledCard:
         self.polling_task = None
 
     async def start_stats_polling(self, interval=2):
-        try:
-            while self.plugin.is_running:
-                print("Polling")
-                self.plugin.get_current_stats()
-                self.update_stats_ui(self.plugin.current_stats)
-                await asyncio.sleep(interval)
-        except asyncio.CancelledError:
-            print("Polling dead.")
-        finally:
-            self.polling_task = None
+        while self.plugin.is_running:
+            self.plugin.get_random_stats()
+            self.update_stats_ui(self.plugin.current_stats)
+            await asyncio.sleep(interval)
 
     @ui.refreshable
     async def render(self):
         if self.plugin.is_running:
-            self.plugin.get_current_stats()    
-        if self.polling_task and not self.polling_task.done():
-            self.polling_task.cancel()
-            try:
-                await self.polling_task
-            except asyncio.CancelledError:
-                print("Polling task cancelled.")
-        if self.plugin.is_running:
             self.polling_task = asyncio.create_task(self.start_stats_polling())
-        
+        elif self.polling_task != None:
+            self.polling_task.cancel()
         with ui.card().tight().classes(f"w-80"):
             with ui.card_section().classes('w-full'):
                 with ui.row().classes("justify-between w-full"):
@@ -228,7 +215,6 @@ class PluginInstalledCard:
         self.cpu_prog = stats['cpu'] / 100
         self.mem_prog = stats['memory'] / stats['memory_limit']
         self.disk_prog = stats['disk'] / 100
-        self.render_stats.refresh()
     
     async def restart_plugin(self):
         await self.plugin.stop()

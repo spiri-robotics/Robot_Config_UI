@@ -53,6 +53,7 @@ async def main_ui():
 
 
 def on_plugin_installed(plugin_name: str):
+    global installed_cards
     plugin = installed_plugins[plugin_name]
     installed_cards[plugin.name] = PluginInstalledCard(plugin)
     browser_cards[plugin_name].render.refresh()
@@ -60,6 +61,7 @@ def on_plugin_installed(plugin_name: str):
 
 
 def on_plugin_uninstalled(plugin_name: str):
+    global installed_cards
     if plugin_name in installed_cards.keys():
         del installed_cards[plugin_name]
     installed_grid_ui.refresh()
@@ -68,6 +70,7 @@ def on_plugin_uninstalled(plugin_name: str):
 
 
 def on_plugin_run(plugin_name: str):
+    global installed_cards
     installed_cards[plugin_name].render.refresh()
 
 

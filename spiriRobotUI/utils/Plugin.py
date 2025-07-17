@@ -1,4 +1,4 @@
-import asyncio, docker, git, shutil, subprocess, time, re
+import asyncio, docker, git, shutil, subprocess, time, re, random
 
 from pathlib import Path
 from nicegui import ui
@@ -129,6 +129,12 @@ class InstalledPlugin(Plugin):
             if self.folder_name in container.name:
                 self._containers.append(container)
 
+    def get_random_stats(self):
+        self.current_stats["cpu"] = random.randint(0, 100)
+        self.current_stats["memory"] = random.randint(0, 100)
+        self.current_stats["memory_limit"] = 100
+        self.current_stats["disk"] = 10  # Placeholder
+        
     def get_status(self):
         if not self.is_running:
             return "stopped"
@@ -334,29 +340,29 @@ class InstalledPlugin(Plugin):
                     continue
                 stats = container.stats(stream=False)
                 # Defensive checks for missing keys
-                cpu_stats = stats.get("cpu_stats", {})
-                precpu_stats = stats.get("precpu_stats", {})
-                cpu_usage = cpu_stats.get("cpu_usage", {})
-                precpu_usage = precpu_stats.get("cpu_usage", {})
-                system_cpu_usage = cpu_stats.get("system_cpu_usage")
-                pre_system_cpu_usage = precpu_stats.get("system_cpu_usage")
-                percpu_usage = cpu_usage.get("percpu_usage", [])
-                # Only calculate if all required values are present
-                if (
-                    system_cpu_usage is not None
-                    and pre_system_cpu_usage is not None
-                    and "total_usage" in cpu_usage
-                    and "total_usage" in precpu_usage
-                    and percpu_usage
-                ):
-                    cpu_delta = cpu_usage["total_usage"] - precpu_usage["total_usage"]
-                    system_delta = system_cpu_usage - pre_system_cpu_usage
-                    cpu_percent = 0.0
-                    if system_delta > 0 and cpu_delta > 0:
-                        cpu_percent = (cpu_delta / system_delta) * len(percpu_usage)
-                    total_cpu += cpu_percent
-                else:
-                    print(f"Warning: Missing CPU stats for container {container.name}")
+                # cpu_stats = stats.get("cpu_stats", {})
+                # precpu_stats = stats.get("precpu_stats", {})
+                # cpu_usage = cpu_stats.get("cpu_usage", {})
+                # precpu_usage = precpu_stats.get("cpu_usage", {})
+                # system_cpu_usage = cpu_stats.get("system_cpu_usage")
+                # pre_system_cpu_usage = precpu_stats.get("system_cpu_usage")
+                # percpu_usage = cpu_usage.get("percpu_usage", [])
+                # # Only calculate if all required values are present
+                # if (
+                #     system_cpu_usage is not None
+                #     and pre_system_cpu_usage is not None
+                #     and "total_usage" in cpu_usage
+                #     and "total_usage" in precpu_usage
+                #     and percpu_usage
+                # ):
+                #     cpu_delta = cpu_usage["total_usage"] - precpu_usage["total_usage"]
+                #     system_delta = system_cpu_usage - pre_system_cpu_usage
+                #     cpu_percent = 0.0
+                #     if system_delta > 0 and cpu_delta > 0:
+                #         cpu_percent = (cpu_delta / system_delta) * len(percpu_usage)
+                #     total_cpu += cpu_percent
+                # else:
+                #     print(f"Warning: Missing CPU stats for container {container.name}")
                 # Memory stats
                 memory_stats = stats.get("memory_stats", {})
                 total_memory += memory_stats.get("usage", 0) / (1024**2)
