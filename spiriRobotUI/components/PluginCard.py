@@ -1,11 +1,11 @@
-from nicegui import app, ui, Client
 import asyncio
+
+from nicegui import ui 
+
 from spiriRobotUI.components.PluginDialog import PluginDialog
 from spiriRobotUI.components.ToggleButton import ToggleButton
 from spiriRobotUI.utils.Plugin import InstalledPlugin, Plugin
-from spiriRobotUI.utils.EventBus import event_bus
 from spiriRobotUI.utils.styles import style_vars
-from spiriRobotUI.utils.system_utils import disk
 
 class PluginBrowserCard:
     def __init__(self, plugin: Plugin):
@@ -135,11 +135,11 @@ class PluginInstalledCard:
     async def render_stats(self):
         with ui.grid(columns=2).classes("w-full text-base font-light items-center"):
             ui.markdown("CPU usage:")
-            ui.linear_progress().bind_value(self, 'cpu_prog')
+            ui.linear_progress(color='secondary').props('track-color=info').bind_value(self, 'cpu_prog')
             ui.markdown("Memory usage:")
-            ui.linear_progress().bind_value(self, 'mem_prog')
+            ui.linear_progress(color='secondary').props('track-color=info').bind_value(self, 'mem_prog')
             ui.markdown("Disk usage:")
-            ui.linear_progress().bind_value(self, 'disk_prog')
+            ui.linear_progress(color='secondary').props('track-color=info').bind_value(self, 'disk_prog')
 
     def update_status(self):
         status = self.plugin.get_status()
