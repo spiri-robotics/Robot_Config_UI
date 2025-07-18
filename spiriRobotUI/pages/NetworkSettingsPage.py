@@ -5,7 +5,7 @@ from spiriRobotUI.components.Header import header
 from spiriRobotUI.components.Sidebar import sidebar
 from spiriRobotUI.utils.styles import styles
 
-@ui.page("/network")
+@ui.page("/networksettings")
 async def network_ui():
     await styles()
     sidebar()

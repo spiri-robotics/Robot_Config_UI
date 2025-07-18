@@ -26,7 +26,7 @@ system_stats = {
     'core_temps': None
 }
 
-@ui.page("/system")
+@ui.page("/systemmonitor")
 async def system_ui():
     await styles()
     sidebar()
