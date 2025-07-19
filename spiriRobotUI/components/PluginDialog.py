@@ -21,7 +21,7 @@ class PluginDialog:
                 ):
                     with ui.row().classes("w-full justify-between"):
                         ui.label(self.plugin.name.strip()).classes("text-3xl font-light")
-                        self.install_toggle = ToggleButton(
+                        ToggleButton(
                             on_label="Install",
                             off_label="Uninstall",
                             on_switch=lambda: self.plugin.install(),

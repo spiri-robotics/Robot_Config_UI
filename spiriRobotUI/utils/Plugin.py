@@ -97,7 +97,6 @@ class Plugin:
     def get_readme_contents(self):
         for file in (REPOS / self.repo / 'services' / self.name).iterdir():
             if file.name.casefold() == 'readme.md':
-                print(f'found readme named {file.name}')
                 with open(file, "r") as f:
                     readme_contents = f.read()
                 return readme_contents

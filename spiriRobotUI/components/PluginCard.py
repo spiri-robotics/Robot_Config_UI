@@ -9,7 +9,6 @@ from spiriRobotUI.utils.styles import style_vars
 
 class PluginBrowserCard:
     def __init__(self, plugin: Plugin):
-        self.base_card_classes = f"flex-col shadow-[{style_vars['flex-shadow']}]"
         self.plugin_dialog = PluginDialog(plugin)
         self.plugin = plugin
 
@@ -39,7 +38,6 @@ class PluginBrowserCard:
 
 class PluginInstalledCard:
     def __init__(self, plugin: InstalledPlugin):
-        self.base_card_classes = ""
         self.plugin = plugin
         self.cpu_prog = 0.0
         self.mem_prog = 0.0
@@ -59,11 +57,11 @@ class PluginInstalledCard:
             self.polling_task = asyncio.create_task(self.start_stats_polling())
         elif self.polling_task != None:
             self.polling_task.cancel()
-        with ui.card().tight().classes(f"w-80"):
+        with ui.card().tight().classes("w-80"):
             with ui.card_section().classes('w-full'):
                 with ui.row().classes("justify-between w-full"):
                     ui.image(self.plugin.logo).classes("w-24 h-24 rounded")
-                    self.enable_toggle = ToggleButton(
+                    ToggleButton(
                         on_label="Disable",
                         off_label="Enable and Start",
                         on_switch=self.plugin.stop,

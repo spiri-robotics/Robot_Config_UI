@@ -13,7 +13,7 @@ def register_plugins():
         for plugin in (repo / "services").iterdir():
             logo = plugin / "logo.jpg"
             if not logo.exists():
-                logo = "spiriRobotUI/icons/placeholder_logo.jpeg"
+                logo = "spiriRobotUI/icons/placeholder_logo.png"
             plugins[plugin.name] = Plugin(plugin.name, str(logo), repo.name, plugin.name)
             
 def register_installed():
