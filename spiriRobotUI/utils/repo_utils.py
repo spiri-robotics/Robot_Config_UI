@@ -4,6 +4,7 @@ from nicegui import ui
 from git import Repo
 from pathlib import Path
 
+from spiriRobotUI.utils.styles import style_vars
 from spiriRobotUI.settings import PROJECT_ROOT
 from spiriRobotUI.utils.plugins_page_utils import register_plugins, create_browser_cards, browser_grid_ui
 
@@ -19,15 +20,25 @@ for repo in (PROJECT_ROOT / "repos").iterdir():
 @ui.refreshable
 def display_repos():
     # List installed repos
-    for repo in installed_repos:
-        with ui.card():
-            ui.label(f"{repo['name']}").classes('text-lg font-medium')
-            # List plugins
-            with ui.column().classes("pl-4 pb-2"):
-                for plugin in repo.get("plugins", []):
-                    ui.label(f"• {plugin}").classes("text-base font-light")
+    if len(installed_repos) > 0:
+        with ui.grid(columns=3):
+            for repo in installed_repos:
+                with ui.card().classes(f'shadow-[{style_vars["flex-shadow"]}]'):
+                    ui.label(f"{repo['name']}").classes('text-lg font-medium')
+                    # List plugins
+                    with ui.column().classes("pl-4 pb-2"):
+                        for plugin in repo.get("plugins", []):
+                            ui.label(f"• {plugin}").classes("text-base font-light")
 
-            ui.button("Remove", on_click=lambda r=repo: remove_repository(r), color='negative')
+                    ui.button("Remove", on_click=lambda r=repo: remove_repository(r), color='negative')
+            add_repo =  ui.card().classes(f'items-center transition transform hover:scale-[1.03] shadow-[{style_vars["flex-shadow"]}]')
+            with add_repo:
+                ui.label("Add a Repository").classes('text-lg font-medium')
+                ui.image("spiriRobotUI/icons/add_repo.svg")
+            add_repo.on("click", add_repository)
+            
+    else:
+        ui.label("No Repositories Added").classes('text-base font-light')
 
 def repo_dialog() -> ui.dialog:
     with ui.dialog() as d, ui.card().classes('w-1/4'):
