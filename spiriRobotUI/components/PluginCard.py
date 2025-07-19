@@ -127,7 +127,6 @@ class PluginInstalledCard:
             ui.markdown("CPU usage:")
             ui.label().bind_text_from(self.stats, 'cpu', backward=lambda stats: f"{str(stats)[0:4]}%")
             ui.markdown("Memory usage:")
-            print(self.stats['memory_limit'])
             ui.label().bind_text_from(self.stats, 'memory', backward=lambda stats: f"{str(stats)[0:4]} GB / {str(self.stats['memory_limit'])[0:4]} GB")
 
     def update_status(self):
