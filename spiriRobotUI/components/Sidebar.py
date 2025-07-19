@@ -16,7 +16,7 @@ def sidebar() -> None:
             
             ui.button('Plug-ins', color='secondary', on_click=lambda: ui.navigate.to("/")).classes('w-full')
             for variable in dotenv:
-                if variable and variable.split('_')[0] == 'FEATURE':
+                if variable and variable.split('_')[0] == 'FEATURE' and dotenv[variable] == 'enabled':
                     feature_name = variable.split('_')[1]
                     feature_page = f"/{feature_name.lower()}"
                     ui.button(feature_name, color='secondary', on_click=lambda feature_page=feature_page: ui.navigate.to(feature_page)).classes('w-full')
