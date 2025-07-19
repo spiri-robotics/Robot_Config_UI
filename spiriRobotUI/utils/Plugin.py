@@ -340,34 +340,43 @@ class InstalledPlugin(Plugin):
                 if container.status != "running":
                     continue
                 stats = container.stats(stream=False)
-                # Defensive checks for missing keys
-                # cpu_stats = stats.get("cpu_stats", {})
-                # precpu_stats = stats.get("precpu_stats", {})
-                # cpu_usage = cpu_stats.get("cpu_usage", {})
-                # precpu_usage = precpu_stats.get("cpu_usage", {})
-                # system_cpu_usage = cpu_stats.get("system_cpu_usage")
-                # pre_system_cpu_usage = precpu_stats.get("system_cpu_usage")
-                # percpu_usage = cpu_usage.get("percpu_usage", [])
-                # # Only calculate if all required values are present
-                # if (
-                #     system_cpu_usage is not None
-                #     and pre_system_cpu_usage is not None
-                #     and "total_usage" in cpu_usage
-                #     and "total_usage" in precpu_usage
-                #     and percpu_usage
-                # ):
-                #     cpu_delta = cpu_usage["total_usage"] - precpu_usage["total_usage"]
-                #     system_delta = system_cpu_usage - pre_system_cpu_usage
-                #     cpu_percent = 0.0
-                #     if system_delta > 0 and cpu_delta > 0:
-                #         cpu_percent = (cpu_delta / system_delta) * len(percpu_usage)
-                #     total_cpu += cpu_percent
-                # else:
-                #     print(f"Warning: Missing CPU stats for container {container.name}")
-                # Memory stats
-                memory_stats = stats.get("memory_stats", {})
-                total_memory += memory_stats.get("usage", 0) / (1024**2)
-                total_memory_limit += memory_stats.get("limit", 0) / (1024**2)
+                
+                #CPU Stats
+                try:
+                    cpu_stats = stats['cpu_stats']
+                    precpu_stats = stats['precpu_stats']
+                    
+                    cpu_usage = cpu_stats['cpu_usage']['total_usage']
+                    precpu_usage = precpu_stats['cpu_usage']['total_usage']
+                    
+                    system_cpu_usage = cpu_stats['system_cpu_usage']
+                    pre_system_cpu_usage = precpu_stats['system_cpu_usage']
+                    
+                    # percpu_usage = cpu_usage['percpu_usage']
+                    
+                    cpu_delta = cpu_usage - precpu_usage
+                    system_delta = system_cpu_usage - pre_system_cpu_usage
+                    cpu_percent = 0.0
+                    # if system_delta > 0 and cpu_delta > 0 and percpu_usage != null:
+                    #     cpu_percent = (cpu_delta / system_delta) * len(percpu_usage)
+                    # else:
+                    cpu_percent = (cpu_delta / system_delta) * 100
+                    total_cpu += cpu_percent
+                    
+                except Exception as e:
+                    total_cpu=0
+                    logger.error(f'e')
+                   
+                #Memory Stats 
+                try:
+                    memory_stats = stats['memory_stats']
+                    total_memory += memory_stats['usage'] / (1024**3)
+                    total_memory_limit += memory_stats['limit'] / (1024**3)
+                except Exception as e:
+                    total_memory=0
+                    total_memory_limit =0
+                    logger.error(f'e')
+
                 # If any container is not running, mark status as not running
                 if container.status != "running":
                     status = container.status

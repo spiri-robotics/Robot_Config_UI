@@ -41,16 +41,15 @@ class PluginInstalledCard:
     def __init__(self, plugin: InstalledPlugin):
         self.base_card_classes = ""
         self.plugin = plugin
-        self.cpu_prog = 0.0
-        self.mem_prog = 0.0
-        self.disk_prog = 0.0
+        plugin.get_current_stats()
+        self.stats = plugin.current_stats
         self.chips = {}
         self.polling_task = None
 
     async def start_stats_polling(self, interval=2):
         while self.plugin.is_running:
-            self.plugin.get_random_stats()
-            self.update_stats_ui(self.plugin.current_stats)
+            self.plugin.get_current_stats()
+            self.update_stats()
             await asyncio.sleep(interval)
 
     @ui.refreshable
@@ -126,13 +125,11 @@ class PluginInstalledCard:
                     
     @ui.refreshable
     async def render_stats(self):
-        with ui.grid(columns=2).classes("w-full text-base font-light items-center"):
+        with ui.grid(columns=2).classes("w-full font-medium items-center"):
             ui.markdown("CPU usage:")
-            ui.linear_progress(color='secondary').props('track-color=info').bind_value(self, 'cpu_prog')
+            ui.label().bind_text_from(self.stats, 'cpu', backward=lambda stats: f"{str(stats)[0:4]}%")
             ui.markdown("Memory usage:")
-            ui.linear_progress(color='secondary').props('track-color=info').bind_value(self, 'mem_prog')
-            ui.markdown("Disk usage:")
-            ui.linear_progress(color='secondary').props('track-color=info').bind_value(self, 'disk_prog')
+            ui.label().bind_text_from(self.stats, 'memory', backward=lambda stats: f"{str(stats)[0:4]} GB / {str(self.stats['memory_limit'])[0:4]} GB")
 
     def update_status(self):
         status = self.plugin.get_status()
@@ -204,10 +201,10 @@ class PluginInstalledCard:
                     ui.button("Close", color="secondary", on_click=dialog.close)
         dialog.open()
 
-    def update_stats_ui(self, stats):
-        self.cpu_prog = stats['cpu'] / 100
-        self.mem_prog = stats['memory'] / stats['memory_limit']
-        self.disk_prog = stats['disk'] / 100
+    def update_stats(self):
+        new_stats = self.plugin.current_stats
+        for k, v in new_stats.items():
+            self.stats[k] = v
     
     async def restart_plugin(self):
         await self.plugin.stop()
