@@ -1,6 +1,6 @@
-import cpuinfo, datetime, psutil, asyncio
+import cpuinfo, psutil, asyncio
 
-from nicegui import app, ui
+from nicegui import ui
 
 from spiriRobotUI.components.Header import header
 from spiriRobotUI.components.Sidebar import sidebar
@@ -47,12 +47,15 @@ async def system_ui():
 
         with ui.tab_panel(processes_tab):
             ui.markdown("## 🖥️ Processes")
+            ui.label('**Under construction**').classes('text-base')
 
         with ui.tab_panel(network_tab):
             ui.markdown("## 🖥️ Network")
+            ui.label('**Under construction**').classes('text-base')
 
         with ui.tab_panel(about_tab):
             ui.markdown("## 🖥️ About")
+            ui.label('**Under construction**').classes('text-base')
 
 @ui.refreshable
 def sys_monitor_ui():
@@ -60,47 +63,50 @@ def sys_monitor_ui():
 
         # CPU Card
         with ui.card().classes('row-span-2'):
-            ui.label().bind_text_from(system_stats, 'cpu_percent', backward=lambda stats: f"🧠 CPU: {stats:.1f}%").classes('text-3xl font-bold text-[#274c77] dark:text-[#9EDFEC]')
+            ui.label().bind_text_from(system_stats, 'cpu_percent', backward=lambda stats: f"CPU: {stats:.1f}%").classes('text-3xl font-bold text-[#274c77] dark:text-[#9EDFEC]')
             info = cpuinfo.get_cpu_info()
-            ui.label(f"{info['brand_raw']}").classes('text-base')
+            ui.label(f"{info['brand_raw']}").classes('text-base font-light')
             with ui.grid(columns=2):
                 for i, freq in enumerate(system_stats['cpu_freq']):
-                    ui.label(f'Core {i+1}: ').classes('text-base')
+                    ui.label(f'Core {i+1}: ').classes('text-base font-light')
                     ui.label().bind_text_from(
                         system_stats,
                         'core_percents',
                         backward=lambda stats, freq=freq, i=i: f'{stats[i]}% ({freq.current:.0f}MHz)'
-                    ).classes('text-base')
+                    ).classes('text-base font-light')
                     
         # Memory Card
         with ui.card():
-            ui.label().bind_text_from(system_stats, 'mem_percent', backward=lambda stats: f"💾 Memory: {stats:.1f}%").classes('text-3xl font-bold text-[#274c77] dark:text-[#9EDFEC]')
-            ui.label().bind_text_from(system_stats, 'mem_used', backward=lambda stats: f"RAM: {format_bytes(stats)} / {format_bytes(system_stats['mem_total'])}")
-            ui.label().bind_text_from(system_stats, 'swap_used', backward=lambda stats: f"SWAP: {format_bytes(stats)} / {format_bytes(system_stats['swap_total'])}")
+            ui.label().bind_text_from(system_stats, 'mem_percent', backward=lambda stats: f"Memory: {stats:.1f}%").classes('text-3xl font-bold text-[#274c77] dark:text-[#9EDFEC]')
+            ui.label().bind_text_from(system_stats, 'mem_used', backward=lambda stats: f"RAM: {format_bytes(stats)} / {format_bytes(system_stats['mem_total'])}").classes('text-base font-light')
+            ui.label().bind_text_from(system_stats, 'swap_used', backward=lambda stats: f"SWAP: {format_bytes(stats)} / {format_bytes(system_stats['swap_total'])}").classes('text-base font-light')
 
 
         # Temperature Card (with fallback)
         with ui.card().classes('row-span-2'):
-            ui.label("🌡️ Core Temperature").classes('text-3xl font-bold text-[#274c77] dark:text-[#9EDFEC]')
+            ui.label("Core Temperature").classes('text-3xl font-bold text-[#274c77] dark:text-[#9EDFEC]')
             try:
                 if system_stats['core_temps'] != None:
                     for idx, t in enumerate(system_stats['core_temps']):
-                        ui.label().bind_text_from(system_stats, 'core_temps', backward=lambda stats, idx=idx, t=t: f"{t.label}: {stats[idx].current:.1f}°C").classes('text-base')
+                        ui.label().bind_text_from(system_stats, 'core_temps', backward=lambda stats, idx=idx, t=t: f"{t.label}: {stats[idx].current:.1f}°C").classes('text-base font-light')
                 elif system_stats['temps']:
                     for label, sensors in system_stats['temps'].items():
-                        for idx, t in enumerate(sensors):
-                            ui.label().bind_text_from(system_stats, 'temps', backward=lambda stats, label=label, idx=idx, t=t: f"{label} {t.label}: {stats[label][idx].current:.1f}°C").classes('text-base')
+                        # ui.label(f'{label}:').classes('text-lg font-medium')
+                        if len(sensors) > 1:
+                            for idx, t in enumerate(sensors):
+                                ui.label().bind_text_from(system_stats, 'temps', backward=lambda stats, label=label, idx=idx, t=t: f"{label} - {t.label}: {stats[label][idx].current:.1f}°C").classes('text-base font-light')
+                        else:
+                            ui.label().bind_text_from(system_stats, 'temps', backward=lambda stats, label=label: f"{label}: {stats[label][0].current:.1f}°C").classes('text-base font-light')
                 else:
-                    ui.label("Temperature data not available").classes('text-base')
+                    ui.label("Temperature data not available.").classes('text-base font-light')
             except Exception as e:
-                ui.label(f"Temperature sensors unavailable {e}").classes('text-base')
+                ui.label(f"Temperature sensors unavailable: {e}").classes('text-base font-light')
         
         # Disk Card
         with ui.card():
-            disk = psutil.disk_usage('/')
-            ui.label().bind_text_from(system_stats, 'disk_percent', backward=lambda stats: f"🗄️ Disk: {stats:.1f}%").classes('text-3xl font-bold text-[#274c77] dark:text-[#9EDFEC]')
-            ui.label("Disk").classes('text-sm')
-            ui.label().bind_text_from(system_stats, 'disk_used', backward=lambda stats: f"{format_bytes(stats)} / {format_bytes(system_stats['disk_total'])} used").classes('text-base')
+            psutil.disk_usage('/')
+            ui.label().bind_text_from(system_stats, 'disk_percent', backward=lambda stats: f"Disk: {stats:.1f}%").classes('text-3xl font-bold text-[#274c77] dark:text-[#9EDFEC]')
+            ui.label().bind_text_from(system_stats, 'disk_used', backward=lambda stats: f"{format_bytes(stats)} / {format_bytes(system_stats['disk_total'])} used").classes('text-base font-light')
 
 async def system_stats_polling():
     global system_stats

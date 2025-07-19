@@ -10,11 +10,12 @@ def register_plugins():
     # Scan the REPOS directory and register all plugins
     plugins.clear()
     for repo in REPOS.iterdir():
+        plugins[repo.name] = {}
         for plugin in (repo / "services").iterdir():
             logo = plugin / "logo.jpg"
             if not logo.exists():
                 logo = "spiriRobotUI/icons/placeholder_logo.png"
-            plugins[plugin.name] = Plugin(plugin.name, str(logo), repo.name, plugin.name)
+            plugins[repo.name][plugin.name] = Plugin(plugin.name, str(logo), repo.name, plugin.name)
             
 def register_installed():
     # Scan the SERVICES directory and register installed plugins.
@@ -22,16 +23,17 @@ def register_installed():
     for service_dir in SERVICES.iterdir():
         if service_dir.is_dir():
             has_repo = False
-            for plugin in plugins.values():
-                if (
-                    service_dir.name == plugin.folder_name
-                    and plugin.name not in installed_plugins
-                ):
-                    plugin.is_installed = True
-                    has_repo = True
-                    installed_plugins[plugin.name] = InstalledPlugin(
-                        plugin.name, plugin.logo, plugin.repo, plugin.folder_name
-                    )
+            for repo in plugins.keys():
+                for plugin in plugins[repo].values():
+                    if (
+                        service_dir.name == plugin.folder_name
+                        and plugin.name not in installed_plugins
+                    ):
+                        plugin.is_installed = True
+                        has_repo = True
+                        installed_plugins[plugin.name] = InstalledPlugin(
+                            plugin.name, plugin.logo, plugin.repo, plugin.folder_name
+                        )
                     
             if not has_repo:
                 logo = service_dir / "logo.jpg"
@@ -44,8 +46,10 @@ def register_installed():
                 
 def create_browser_cards():
     browser_cards.clear()
-    for plugin in plugins.values():
-        browser_cards[plugin.name] = PluginBrowserCard(plugin)
+    for repo in plugins.keys():
+        browser_cards[repo] = {}
+        for plugin in plugins[repo].values():
+            browser_cards[repo][plugin.name] = PluginBrowserCard(plugin)
 
 
 def update_installed_cards():
@@ -56,9 +60,11 @@ def update_installed_cards():
 @ui.refreshable   
 def browser_grid_ui():
     if len(browser_cards) > 0:
-        with ui.row(align_items='stretch').classes(f"w-full"):
-            for card in browser_cards.values():
-                card.render()
+        for repo in browser_cards.keys():
+            ui.label(f'{repo}:').classes('text-lg font-medium')
+            with ui.row(align_items='stretch').classes(f"w-full"):
+                for card in browser_cards[repo].values():
+                    card.render()
     else:
         ui.label('No plugins available. Please add a repository to view plugins.').classes('text-base font-light')
 

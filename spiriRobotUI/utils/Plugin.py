@@ -92,7 +92,7 @@ class Plugin:
             print(f"{self.name} uninstalled")
         else:
             print(f"Error: {self.name} not installed")
-        event_bus.emit("plugin_uninstalled", self.name)
+        event_bus.emit("plugin_uninstalled", self)
 
     def get_readme_contents(self):
         for file in (REPOS / self.repo / 'services' / self.name).iterdir():
@@ -175,8 +175,8 @@ class InstalledPlugin(Plugin):
                 )
                 return
             self.is_running = True
-            plugins[self.name].is_running = True
-            event_bus.emit("plugin_run", self.name)
+            plugins[self.repo][self.name].is_running = True
+            event_bus.emit("plugin_run", self)
             print(f"{self.name} is running")
         else:
             print(f"Error: {self.name} is already running")
@@ -215,9 +215,9 @@ class InstalledPlugin(Plugin):
                 logger.debug("Waiting for containers to stop...")
 
             self.is_running = False
-            plugins[self.name].is_running = False
+            plugins[self.repo][self.name].is_running = False
             self._containers = []
-            event_bus.emit("plugin_run", self.name)
+            event_bus.emit("plugin_run", self)
             print(f"{self.name} stopped")
         else:
             print(f"Error: {self.name} is not running")
@@ -364,7 +364,7 @@ class InstalledPlugin(Plugin):
                     
                 except Exception as e:
                     total_cpu=0
-                    logger.error(f'e')
+                    logger.error(e)
                    
                 #Memory Stats 
                 try:
@@ -374,7 +374,7 @@ class InstalledPlugin(Plugin):
                 except Exception as e:
                     total_memory=0
                     total_memory_limit =0
-                    logger.error(f'e')
+                    logger.error(e)
 
                 # If any container is not running, mark status as not running
                 if container.status != "running":
