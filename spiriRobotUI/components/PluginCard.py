@@ -1,11 +1,11 @@
-from nicegui import app, ui, Client
 import asyncio
+
+from nicegui import ui 
+
 from spiriRobotUI.components.PluginDialog import PluginDialog
 from spiriRobotUI.components.ToggleButton import ToggleButton
 from spiriRobotUI.utils.Plugin import InstalledPlugin, Plugin
-from spiriRobotUI.utils.EventBus import event_bus
 from spiriRobotUI.utils.styles import style_vars
-from spiriRobotUI.utils.system_utils import disk
 
 class PluginBrowserCard:
     def __init__(self, plugin: Plugin):
@@ -89,15 +89,16 @@ class PluginInstalledCard:
                 
                 with ui.card_section().classes('w-full'):
                     with ui.row().classes('justify-between items-center'):
-                        ui.label("Status:").classes('font-medium')
-                        self.label_status = ui.label('Status Loading...').classes('font-medium')
-                        self.chips = {}
-                        self.chips["Running"] = ui.chip("", color='running', text_color='white').classes('text-center')
-                        self.chips["Restarting"] = ui.chip("", color='restarting', text_color='white')
-                        self.chips["Exited"] = ui.chip("", color='exited', text_color='white')
-                        self.chips["Created"] = ui.chip("", color='created', text_color='white')
-                        self.chips["Paused"] = ui.chip("", color='paused', text_color='white')
-                        self.chips["Dead"] = ui.chip("", color='dead', text_color='white')
+                        ui.label("Status:").classes('text-base font-medium')
+                        with ui.row():
+                            self.label_status = ui.label('Status Loading...').classes('font-medium')
+                            self.chips = {}
+                            self.chips["Running"] = ui.chip("", color='running', text_color='white')
+                            self.chips["Restarting"] = ui.chip("", color='restarting', text_color='white')
+                            self.chips["Exited"] = ui.chip("", color='exited', text_color='white')
+                            self.chips["Created"] = ui.chip("", color='created', text_color='white')
+                            self.chips["Paused"] = ui.chip("", color='paused', text_color='white')
+                            self.chips["Dead"] = ui.chip("", color='dead', text_color='white')
                 self.update_status()
                 
                 ui.separator()
@@ -124,11 +125,11 @@ class PluginInstalledCard:
                         with ui.grid(rows=2, columns=2):
                             ui.button("EDIT", color='secondary', on_click=lambda: self.edit_env())
                             ui.button("UPDATE", color='secondary', on_click=lambda: self.plugin.update())
-                            ui.button("UNINSTALL", color='negative', on_click=lambda: self.uninstall_plugin()).classes('col-end-[span_2]')
+                            ui.button("UNINSTALL", color='negative', on_click=lambda: self.uninstall_plugin()).classes('col-span-2')
                     else:
                         with ui.grid(columns=2):
                             ui.button("EDIT", color='secondary', on_click=lambda: self.edit_env())
-                            ui.button("UNINSTALL", color='negative', on_click=lambda: self.uninstall_plugin()).classes('col-end-[span_2]')
+                            ui.button("UNINSTALL", color='negative', on_click=lambda: self.uninstall_plugin()).classes('col-span-2')
                     
     @ui.refreshable
     async def render_stats(self):
@@ -168,24 +169,24 @@ class PluginInstalledCard:
         if len(logs_list) == 0:
             ui.notify("No logs available for this plugin.")
             return
-        with ui.dialog() as dialog:
-            with ui.card():
-                tab_names = list(logs_list.keys())
-                with ui.tabs() as tabs:
-                    for name in tab_names:
-                        ui.tab(name)
-                with ui.tab_panels(tabs, value=tab_names[0]) as panels:
-                    for name in tab_names:
-                        with ui.tab_panel(name):
-                            ui.code(logs_list[name], language='text').classes("w-full h-64 overflow-auto")
-                            ui.button(
-                                "Download",
-                                icon="download",
-                                color="secondary",
-                                on_click=lambda n=name: ui.download.content(logs_list[n], f"{n}.txt"),
-                            )
-                with ui.row().classes("justify-end"):
-                    ui.button("Close", color="secondary", on_click=dialog.close)
+        with ui.dialog().props('full-width full-height') as dialog, ui.card().classes('items-center'):
+            tab_names = list(logs_list.keys())
+            with ui.tabs() as tabs:
+                for name in tab_names:
+                    ui.tab(name)
+            with ui.tab_panels(tabs, value=tab_names[0]).props('animated=false').classes('w-full h-full'):
+                for name in tab_names:
+                    with ui.tab_panel(name).classes('w-full'):
+                        ui.code(logs_list[name], language='text').classes("w-full h-full overflow-auto")
+                        ui.button(
+                            "Download",
+                            icon="download",
+                            color="secondary",
+                            on_click=lambda n=name: ui.download.content(logs_list[n], f"{n}.txt"),
+                        )
+            with ui.row().classes("justify-end"):
+                ui.button("Close", color="secondary", on_click=dialog.close)
+                
         dialog.classes("w-3/4 h-3/4")
         dialog.props("scrollable")
         dialog.open()
