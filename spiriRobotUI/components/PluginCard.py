@@ -12,23 +12,15 @@ class PluginBrowserCard:
         self.base_card_classes = f"flex-col shadow-[{style_vars['flex-shadow']}]"
         self.plugin_dialog = PluginDialog(plugin)
         self.plugin = plugin
-        self.install_toggle = None
 
     @ui.refreshable
     def render(self):
-        with ui.card().tight().classes(
-            f"w-56 mb-2 transition transform hover:scale-105 {self.base_card_classes}"
-        ):
-            with ui.card_section().classes('w-full justify-center'):
-                card_image = ui.image(self.plugin.logo).classes(
-                    "w-full cursor-pointer rounded self-center"
-                )
-                
-            ui.separator()
-            
-            with ui.card_section().classes("w-full"):
-                ui.label(self.plugin.name.replace('_', ' ').replace('-', ' ').title()).classes("text-lg font-medium pb-4")
-                self.install_toggle = ToggleButton(
+        with ui.card().classes(f'w-full min-[1466px]:w-[{style_vars["half"]}] transition transform hover:scale-[1.03] shadow-[{style_vars["flex-shadow"]}]'):
+            with ui.row(align_items='center').classes('w-full') as clickable:
+                card_image = ui.image(self.plugin.logo).classes('w-16 h-16 rounded')
+                ui.label(self.plugin.name.strip()).classes('text-2xl font-light')
+                ui.space()
+                ToggleButton(
                     on_label="Uninstall",
                     off_label="Install",
                     on_switch=lambda: self.plugin.uninstall(),
@@ -36,7 +28,7 @@ class PluginBrowserCard:
                     state=self.plugin.is_installed,
                     on_color="negative",
                     off_color="secondary",
-                ).classes("w-full")
+                )
 
         def open_dialog():
             self.plugin_dialog.generate_dialog()
@@ -81,7 +73,7 @@ class PluginInstalledCard:
                     ).classes("w-32 h-24")
             
             with ui.card_section().classes('w-full'):
-                ui.label(self.plugin.name.replace('_', ' ').replace('-', ' ').title()).classes("text-xl font-medium")
+                ui.label(self.plugin.name.strip()).classes("text-xl font-medium")
                 ui.label(self.plugin.repo).classes('text-base font-light')
             
             if self.plugin.is_running:

@@ -95,13 +95,14 @@ class Plugin:
         event_bus.emit("plugin_uninstalled", self.name)
 
     def get_readme_contents(self):
-        path = f"repos/{self.repo}/services/{self.name}/README.md"
-        if Path(path).exists():
-            with open(path, "r") as f:
-                readme_contents = f.read()
-            return readme_contents
-        else:
-            return ""
+        for file in (REPOS / self.repo / 'services' / self.name).iterdir():
+            if file.name.casefold() == 'readme.md':
+                print(f'found readme named {file.name}')
+                with open(file, "r") as f:
+                    readme_contents = f.read()
+                return readme_contents
+            
+        return "No README available."
 
 class InstalledPlugin(Plugin):
 
