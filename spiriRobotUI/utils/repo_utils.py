@@ -11,34 +11,29 @@ from spiriRobotUI.utils.plugins_page_utils import register_plugins, create_brows
 installed_repos = []
 
 for repo in (PROJECT_ROOT / "repos").iterdir():
-    repo_plugins = []
-    for plugin in (repo / "services").iterdir():
-        repo_plugins.append(plugin.name)
-    installed_repos.append({"name": repo.name, "plugins": repo_plugins})
+    installed_repos.append(repo.name)
 
 
 @ui.refreshable
 def display_repos():
     # List installed repos
-    if len(installed_repos) > 0:
-        with ui.grid(columns=3):
-            for repo in installed_repos:
-                with ui.card().classes(f'shadow-[{style_vars["flex-shadow"]}]'):
-                    ui.label(f"{repo['name']}").classes('text-lg font-medium')
-                    # List plugins
-                    with ui.column().classes("pl-4 pb-2"):
-                        for plugin in repo.get("plugins", []):
-                            ui.label(f"• {plugin}").classes("text-base font-light")
+    with ui.grid(columns=3).classes('gap-4'):
+        for repo in installed_repos:
+            with ui.card().classes(
+                'aspect-square w-full flex flex-col justify-between items-center '
+                f'shadow-[{style_vars["flex-shadow"]}]'
+            ):
+                ui.label(f"{repo}").classes('text-lg font-medium')
+                ui.button("Remove", on_click=lambda r=repo: remove_repository(r), color='negative').classes('w-full')
 
-                    ui.button("Remove", on_click=lambda r=repo: remove_repository(r), color='negative')
-            add_repo =  ui.card().classes(f'items-center transition transform hover:scale-[1.03] shadow-[{style_vars["flex-shadow"]}]')
-            with add_repo:
-                ui.label("Add a Repository").classes('text-lg font-medium')
-                ui.image("spiriRobotUI/icons/add_repo.svg")
-            add_repo.on("click", add_repository)
-            
-    else:
-        ui.label("No Repositories Added").classes('text-base font-light')
+        # Add repo card (direct with block)
+        with ui.card().classes(
+            'aspect-square w-full flex flex-col justify-center items-center cursor-pointer '
+            f'transition transform hover:scale-[1.03] shadow-[{style_vars["flex-shadow"]}]'
+        ).on('click', add_repository):
+            ui.label("Add a Repository").classes('text-lg font-medium')
+            ui.image("spiriRobotUI/icons/add_repo.svg").classes('w-12 h-12')
+
 
 def repo_dialog() -> ui.dialog:
     with ui.dialog() as d, ui.card().classes('w-1/4'):
@@ -70,10 +65,7 @@ async def add_repository():
         try:
             Repo.clone_from(url, clone_path)
             if clone_path.exists():
-                repo_plugins = []
-                for plugin in (clone_path / "services").iterdir():
-                    repo_plugins.append(plugin.name)
-                installed_repos.append({"name": repo_name, "plugins": repo_plugins})
+                installed_repos.append(repo_name)
                 ui.notify(f"Cloned {repo_name} into /repos")
                 display_repos.refresh()
                 register_plugins()
@@ -86,16 +78,16 @@ async def add_repository():
             ui.notify(f"Error cloning repo: {e}", type="negative")
 
 
-def remove_repository(repo):
-    if repo in installed_repos:
-        installed_repos.remove(repo)
+def remove_repository(repo_name: str):
+    if repo_name in installed_repos:
+        installed_repos.pop(installed_repos.index(repo_name))
 
     # Delete directory from repos/
-    repo_path = Path(PROJECT_ROOT / "repos" / repo["name"])
+    repo_path = Path(PROJECT_ROOT / "repos" / repo_name)
     try:
         if repo_path.exists() and repo_path.is_dir():
             shutil.rmtree(repo_path)
-            ui.notify(f"Deleted repository: {repo['name']}")
+            ui.notify(f"Deleted repository: {repo_name}")
             display_repos.refresh()
             register_plugins()
             create_browser_cards()

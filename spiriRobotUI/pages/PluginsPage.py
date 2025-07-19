@@ -4,7 +4,7 @@ from spiriRobotUI.components.Header import header
 from spiriRobotUI.components.PluginCard import PluginBrowserCard, PluginInstalledCard
 from spiriRobotUI.components.Sidebar import sidebar
 from spiriRobotUI.utils.EventBus import event_bus
-from spiriRobotUI.utils.Plugin import plugins, installed_plugins
+from spiriRobotUI.utils.Plugin import plugins, installed_plugins, Plugin, InstalledPlugin
 from spiriRobotUI.utils.plugins_page_utils import (
     browser_cards, installed_cards, 
     register_plugins, register_installed, 
@@ -48,25 +48,22 @@ async def main_ui():
 
 
 def on_plugin_installed(plugin_name: str):
-    global installed_cards
     plugin = installed_plugins[plugin_name]
     installed_cards[plugin.name] = PluginInstalledCard(plugin)
-    browser_cards[plugin_name].render.refresh()
+    browser_cards[plugin.repo][plugin_name].render.refresh()
     installed_grid_ui.refresh()
 
 
-def on_plugin_uninstalled(plugin_name: str):
-    global installed_cards
-    if plugin_name in installed_cards.keys():
-        del installed_cards[plugin_name]
+def on_plugin_uninstalled(plugin: Plugin):
+    if plugin.name in installed_cards.keys():
+        del installed_cards[plugin.name]
     installed_grid_ui.refresh()
-    plugins[plugin_name].is_installed = False
-    browser_cards[plugin_name].render.refresh()
+    plugins[plugin.repo][plugin.name].is_installed = False
+    browser_cards[plugin.repo][plugin.name].render.refresh()
 
 
-def on_plugin_run(plugin_name: str):
-    global installed_cards
-    installed_cards[plugin_name].render.refresh()
+def on_plugin_run(plugin: InstalledPlugin):
+    installed_cards[plugin.name].render.refresh()
 
 
 event_bus.on("plugin_installed", on_plugin_installed)
