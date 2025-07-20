@@ -1,6 +1,6 @@
 import asyncio
 
-from nicegui import ui 
+from nicegui import ui, run
 
 from spiriRobotUI.components.PluginDialog import PluginDialog
 from spiriRobotUI.components.ToggleButton import ToggleButton
@@ -46,8 +46,8 @@ class PluginInstalledCard:
 
     async def start_stats_polling(self, interval=2):
         while self.plugin.is_running:
-            self.plugin.get_current_stats()
-            self.update_stats()
+            await run.io_bound(self.plugin.get_current_stats)
+            await run.io_bound(self.update_stats)
             await asyncio.sleep(interval)
 
     @ui.refreshable

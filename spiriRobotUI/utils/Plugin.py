@@ -365,7 +365,7 @@ class InstalledPlugin(Plugin):
                     
                 except Exception as e:
                     total_cpu=0
-                    logger.error(e)
+                    logger.warning(e)
                    
                 #Memory Stats 
                 try:
@@ -375,7 +375,7 @@ class InstalledPlugin(Plugin):
                 except Exception as e:
                     total_memory=0
                     total_memory_limit =0
-                    logger.error(e)
+                    logger.warning(e)
 
                 # If any container is not running, mark status as not running
                 if container.status != "running":
