@@ -1,7 +1,7 @@
 import asyncio, docker, git, shutil, subprocess, time, re, random
 
 from pathlib import Path
-from nicegui import ui
+from nicegui import ui, run
 from loguru import logger
 
 from spiriRobotUI.settings import PROJECT_ROOT
@@ -391,5 +391,5 @@ class InstalledPlugin(Plugin):
 
     async def update_stats_periodically(self):
         while self.is_running:
-            self.get_current_stats()
+            run.io_bound(self.get_current_stats)
             await asyncio.sleep(1)
