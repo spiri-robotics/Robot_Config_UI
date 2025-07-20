@@ -7,5 +7,7 @@ RUN apt-get update && apt-get install -y \
 
 COPY ./ /app
 WORKDIR /app
-RUN uv build
+
+# Install uv dependencies
+RUN uv run true
 CMD uv run python -m spiriRobotUI.main
