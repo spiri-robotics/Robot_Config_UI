@@ -11,7 +11,7 @@ from spiriRobotUI.utils.plugins_page_utils import (
     create_browser_cards, update_installed_cards, 
     browser_grid_ui, installed_grid_ui
 )
-from spiriRobotUI.utils.repo_utils import display_repos, add_repository
+from spiriRobotUI.utils.repo_utils import display_repos
 from spiriRobotUI.utils.styles import styles
 
 
@@ -25,11 +25,6 @@ async def main_ui():
         ui.markdown("## Plug-in Coordinator")
     with ui.row(align_items='end').classes('w-full justify-between'):
         ui.label("Your favourite plugins, now all in one place.").classes('text-xl font-light')
-        ui.button(
-            "Add Repository",
-            on_click=add_repository,
-            color="secondary",
-        )
 
     ui.separator()
 

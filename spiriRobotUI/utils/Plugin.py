@@ -118,6 +118,7 @@ class InstalledPlugin(Plugin):
             "status": "stopped",
             "cpu": 0.0,
             "memory": 0.0,
+            "memory_limit": 0.0,
             "disk": 0.0,
         }
 
