@@ -1,0 +1,12 @@
+version: "3.8"
+
+services:
+  robot-config-ui:
+    user: root
+    image: ghcr.io/spiri-robotics/robot_config_ui:dev
+    ports:
+      - "8089:8089"
+    volumes:
+      - /services:/services
+      - ./repos/:/app/repos
+      - /var/run/docker.sock:/var/run/docker.sock
