@@ -1,3 +1,5 @@
+import inspect
+
 from nicegui import ui
 
 class ToggleButton(ui.button):
@@ -9,8 +11,8 @@ class ToggleButton(ui.button):
         on_switch=None,
         off_switch=None,
         state,
-        on_color="positive",
-        off_color="warning",
+        on_color="negative",
+        off_color="positive",
         **kwargs,
     ):
         
@@ -26,11 +28,21 @@ class ToggleButton(ui.button):
         self.on("click", self.toggle)
 
     async def toggle(self) -> None:
+        result = False
+        self.props(add='loading')
         if self.state:
-            self.on_switch()
+            if inspect.iscoroutinefunction(self.on_switch):
+                result = await self.on_switch()
+            else:
+                result = self.on_switch()
         elif not self.state:
-            self.off_switch()
-        self.state = not self.state
+            if inspect.iscoroutinefunction(self.off_switch):
+                result = await self.off_switch()
+            else:
+                result = self.off_switch()
+        if (result != False):
+            self.state = not self.state
+        self.props(remove='loading')
         self.update()
 
     def update(self) -> None:

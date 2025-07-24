@@ -1,120 +1,211 @@
-from nicegui import ui
+import asyncio
+
+from nicegui import ui, run
 
 from spiriRobotUI.components.PluginDialog import PluginDialog
 from spiriRobotUI.components.ToggleButton import ToggleButton
-from spiriRobotUI.utils.Plugin import InstalledPlugin, Plugin, plugins, installed_plugins
-from spiriRobotUI.utils.styles import DARK_MODE
-
+from spiriRobotUI.utils.Plugin import InstalledPlugin, Plugin
+from spiriRobotUI.utils.styles import style_vars
 
 class PluginBrowserCard:
     def __init__(self, plugin: Plugin):
-        self.base_card_classes = "w-56 h-64 flex-col justify-between"
         self.plugin_dialog = PluginDialog(plugin)
         self.plugin = plugin
-        self.install_toggle = None
 
+    @ui.refreshable
     def render(self):
-        browser_card = ui.card().classes(
-            f"transition transform hover:scale-105 hover:border-blue-500 {self.base_card_classes}"
-        )
-        if DARK_MODE:
-            browser_card.classes(f"dark-card")
-            
-        with browser_card:
-            card_image = ui.image(self.plugin.logo).classes(
-                "w-full h-48 object-cover cursor-pointer"
-            )
-            with ui.row().classes("items-center justify-between w-full"):
-                ui.label(self.plugin.name.upper()).classes("text-lg font-bold")
-                self.install_toggle = ToggleButton(
-                    on_label="Install",
-                    off_label="Uninstall",
-                    on_switch=lambda: self.plugin.install(),
-                    off_switch=lambda: self.plugin.uninstall(),
-                    state=not self.plugin.is_installed,
-                    on_color="secondary",
-                    off_color="warning",
-                ).classes("w-1/2")
+        card = ui.card().classes(f'cursor-pointer w-full min-[1466px]:w-[{style_vars["half"]}] transition transform hover:scale-[1.03] shadow-[{style_vars["flex-shadow"]}]')
+        with card:
+            with ui.row(align_items='center').classes('w-full') as clickable:
+                card_image = ui.image(self.plugin.logo).classes('w-16 h-16 rounded')
+                ui.label(self.plugin.name.strip()).classes('text-2xl font-light')
+                ui.space()
+                ToggleButton(
+                    on_label="Uninstall",
+                    off_label="Install",
+                    on_switch=lambda: self.plugin.uninstall(),
+                    off_switch=lambda: self.plugin.install(),
+                    state=self.plugin.is_installed,
+                    on_color="negative",
+                    off_color="secondary",
+                )
 
         def open_dialog():
             self.plugin_dialog.generate_dialog()
             self.plugin_dialog.dialog.open()
 
-        card_image.on("click", open_dialog)
+        card.on("click", open_dialog)
+
 
 class PluginInstalledCard:
     def __init__(self, plugin: InstalledPlugin):
-        self.base_card_classes = ""
         self.plugin = plugin
+        plugin.get_current_stats()
+        self.stats = plugin.current_stats
+        self.chips = {}
+        self.polling_task = None
 
-    def render(self):
-        self.plugin.get_current_stats()
-        self.plugin.get_base_stats()
-        installed_card = ui.card().classes(f"{self.base_card_classes}")
-        if DARK_MODE:
-            installed_card.classes(f"dark-card")
-        with installed_card:
-            with ui.row().classes("justify-between w-full"):
-                ui.image(self.plugin.logo).classes("w-24 h-24")
-                self.enable_toggle = ToggleButton(
-                    on_label="Enable and Start",
-                    off_label="Disable",
-                    on_switch=lambda: self.plugin.run(),
-                    off_switch=lambda: self.plugin.stop(),
-                    state=not self.plugin.is_running,
-                    on_color="secondary",
-                    off_color="warning",
-                ).classes("w-28 h-24")
-            ui.separator()
-            with ui.row().classes("justify-between w-full"):
-                ui.label(self.plugin.name.upper()).classes("text-lg font-bold")
-            ui.separator()
-            ui.label(self.plugin.repo)
-            ui.separator()
-            if not self.plugin.is_running:
-                with ui.grid(columns=2).classes("text-xl font-bold"):
-                    ui.label("Status")
-                    ui.markdown().bind_content_from(
-                        self.plugin.current_stats, "status", backward=lambda v: f"{v}"
-                    )
+    async def start_stats_polling(self, interval=2):
+        while self.plugin.is_running:
+            await run.io_bound(self.plugin.get_current_stats)
+            await run.io_bound(self.update_stats)
+            await asyncio.sleep(interval)
 
-                    ui.markdown("CPU usage: ")
-                    cpu_progress = ui.linear_progress().bind_value_from(
-                        self.plugin.current_stats["cpu"]
-                    )
-
-                    ui.markdown("Memory usage: ")
-                    memory_progress = ui.linear_progress().bind_value_from(
-                        self.plugin.current_stats["memory"]
-                        / self.plugin.base_stats["memory"]
-                    )
-
-                    ui.markdown("Disk usage: ")
-                    disk_progress = ui.linear_progress().bind_value_from(
-                        self.plugin.current_stats["disk"] / self.plugin.base_stats["disk"]
-                    )
-                with ui.row():
-                    ui.button("UNINSTALL", color='secondary', on_click=lambda: self.uninstall_plugin())
-                    ui.button("VIEW LOGS", color='secondary', on_click=lambda: self.get_logs())
-                    ui.button("EDIT", color='secondary', on_click=lambda: self.edit_env())
-                    ui.button("RESTART", color='secondary', on_click=lambda: self.restart_plugin())
+    @ui.refreshable
+    async def render(self):
+        if self.plugin.is_running:
+            self.polling_task = asyncio.create_task(self.start_stats_polling())
+        elif self.polling_task != None:
+            self.polling_task.cancel()
+        with ui.card().tight().classes("w-80"):
+            with ui.card_section().classes('w-full'):
+                with ui.row().classes("justify-between w-full"):
+                    ui.image(self.plugin.logo).classes("w-24 h-24 rounded")
+                    ToggleButton(
+                        on_label="Disable",
+                        off_label="Enable and Start",
+                        on_switch=self.plugin.stop,
+                        off_switch=self.plugin.run,
+                        state=self.plugin.is_running,
+                        on_color="negative",
+                        off_color="positive",
+                    ).classes("w-32 h-24")
+            
+            with ui.card_section().classes('w-full'):
+                ui.label(self.plugin.name.strip()).classes("text-xl font-medium")
+                ui.label(self.plugin.repo).classes('text-base font-light')
+            
+            if self.plugin.is_running:
+                ui.separator()
+                
+                with ui.card_section().classes('w-full'):
+                    with ui.row().classes('justify-between items-center'):
+                        ui.label("Status:").classes('text-base font-medium')
+                        with ui.row():
+                            self.label_status = ui.label('Status Loading...').classes('font-medium')
+                            self.chips = {}
+                            self.chips["Running"] = ui.chip("", color='running', text_color='white')
+                            self.chips["Restarting"] = ui.chip("", color='restarting', text_color='white')
+                            self.chips["Exited"] = ui.chip("", color='exited', text_color='white')
+                            self.chips["Created"] = ui.chip("", color='created', text_color='white')
+                            self.chips["Paused"] = ui.chip("", color='paused', text_color='white')
+                            self.chips["Dead"] = ui.chip("", color='dead', text_color='white')
+                self.update_status()
+                
+                ui.separator()
+                with ui.card_section().classes('w-full'):
+                    await self.render_stats()
+                ui.separator()
+                
+                with ui.card_section().classes('w-full'):
+                    with ui.grid(rows=2, columns=2):
+                        if self.plugin.repo:
+                            ui.button("EDIT", color='secondary', on_click=lambda: self.edit_env())
+                            ui.button("UPDATE", color='secondary', on_click=lambda: self.plugin.update())
+                            ui.button("VIEW LOGS", color='secondary', on_click=lambda: self.get_logs())
+                            ui.button("RESTART", color='secondary', on_click=lambda: self.restart_plugin())
+                        else:
+                            ui.button("EDIT", color='secondary', on_click=lambda: self.edit_env())
+                            ui.button("VIEW LOGS", color='secondary', on_click=lambda: self.get_logs())
+                            ui.button("RESTART", color='secondary', on_click=lambda: self.restart_plugin()).classes('col-span-2')
+                        
+            else:
+                ui.space()
+                with ui.card_section().classes('w-full'):
+                    if self.plugin.repo:
+                        with ui.grid(rows=2, columns=2):
+                            ui.button("EDIT", color='secondary', on_click=lambda: self.edit_env())
+                            ui.button("UPDATE", color='secondary', on_click=lambda: self.plugin.update())
+                            ui.button("UNINSTALL", color='negative', on_click=lambda: self.uninstall_plugin()).classes('col-span-2')
+                    else:
+                        with ui.grid(columns=2):
+                            ui.button("EDIT", color='secondary', on_click=lambda: self.edit_env())
+                            ui.button("UNINSTALL", color='negative', on_click=lambda: self.uninstall_plugin()).classes('col-span-2')
                     
+    @ui.refreshable
+    async def render_stats(self):
+        with ui.grid(columns=2).classes("w-full font-medium items-center"):
+            ui.markdown("CPU usage:")
+            ui.label().bind_text_from(self.stats, 'cpu', backward=lambda stats: f"{str(stats)[0:4]}%")
+            ui.markdown("Memory usage:")
+            ui.label().bind_text_from(self.stats, 'memory', backward=lambda stats: f"{str(stats)[0:4]} GB / {str(self.stats['memory_limit'])[0:4]} GB")
+
+    def update_status(self):
+        status = self.plugin.get_status()
+        if isinstance(status, dict):
+            for state in status.keys():
+                if status[state] > 0:
+                    self.chips[state].visible = True
+                    self.chips[state].text = f'{state}: {status.get(state, 0)}'
+                else:
+                    self.chips[state].visible = False
+            self.label_status.visible = False
+        else:
+            for state in self.chips.keys():
+                self.chips[state].visible = False
+            self.label_status.visible = True
+            self.label_status.text = f'{status.title()}'
+        if status == 'stopped':
+            self.on = False
+            self.label_status.classes('text-[#BF5234]')
+        else:
+            self.label_status.classes(remove='text-[#BF5234]')
+
     def uninstall_plugin(self):
         self.plugin.uninstall()
-    
+        
+
     def get_logs(self):
-        logs = self.plugin.get_logs()
-        with ui.dialog() as dialog:
-            ui.label("Plugin Logs").classes("text-lg font-bold")
-            ui.textarea(logs).classes("w-full h-64").props("readonly")
+        logs_list = self.plugin.get_logs()
+        if len(logs_list) == 0:
+            ui.notify("No logs available for this plugin.")
+            return
+        with ui.dialog().props('full-width full-height') as dialog, ui.card().classes('items-center'):
+            tab_names = list(logs_list.keys())
+            with ui.tabs() as tabs:
+                for name in tab_names:
+                    ui.tab(name)
+            with ui.tab_panels(tabs, value=tab_names[0]).props('animated=false').classes('w-full h-full'):
+                for name in tab_names:
+                    with ui.tab_panel(name).classes('w-full'):
+                        ui.code(logs_list[name], language='text').classes("w-full h-full overflow-auto")
+                        ui.button(
+                            "Download",
+                            icon="download",
+                            color="secondary",
+                            on_click=lambda n=name: ui.download.content(logs_list[n], f"{n}.txt"),
+                        )
             with ui.row().classes("justify-end"):
-                ui.button("Download Logs", color='secondary', on_click=lambda: ui.download.content(logs, f"{self.plugin.name}_logs.txt"))
-                ui.button("Close", color='secondary', on_click=dialog.close)
+                ui.button("Close", color="secondary", on_click=dialog.close)
+                
+        dialog.classes("w-3/4 h-3/4")
+        dialog.props("scrollable")
         dialog.open()
 
     def edit_env(self):
-        self.plugin.edit_env()
+        env = self.plugin.get_env()
+        with ui.dialog() as dialog:
+            with ui.card().classes("w-3/4 h-3/4"):
+                ui.label("Edit Environment Variables").classes("text-lg font-bold")
+                code = ui.codemirror(env, language="json").classes("w-full h-64")
+                code.props(
+                    'mode="application/json" line-numbers theme="default" readonly=false tab-size=2 auto-close-brackets match-brackets line-wrapping'
+                )
+                with ui.row().classes("justify-end"):
+                    ui.button(
+                        "Save",
+                        color="secondary",
+                        on_click=lambda: self.plugin.set_env(code.value),
+                    )
+                    ui.button("Close", color="secondary", on_click=dialog.close)
+        dialog.open()
 
-    def restart_plugin(self):
-        self.plugin.stop()
-        self.plugin.run()
+    def update_stats(self):
+        new_stats = self.plugin.current_stats
+        for k, v in new_stats.items():
+            self.stats[k] = v
+    
+    async def restart_plugin(self):
+        await self.plugin.stop()
+        print(self.plugin.is_running)
+        await self.plugin.run()
