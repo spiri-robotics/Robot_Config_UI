@@ -14,7 +14,8 @@ class PluginBrowserCard:
 
     @ui.refreshable
     def render(self):
-        with ui.card().classes(f'w-full min-[1466px]:w-[{style_vars["half"]}] transition transform hover:scale-[1.03] shadow-[{style_vars["flex-shadow"]}]'):
+        card = ui.card().classes(f'cursor-pointer w-full min-[1466px]:w-[{style_vars["half"]}] transition transform hover:scale-[1.03] shadow-[{style_vars["flex-shadow"]}]')
+        with card:
             with ui.row(align_items='center').classes('w-full') as clickable:
                 card_image = ui.image(self.plugin.logo).classes('w-16 h-16 rounded')
                 ui.label(self.plugin.name.strip()).classes('text-2xl font-light')
@@ -33,7 +34,7 @@ class PluginBrowserCard:
             self.plugin_dialog.generate_dialog()
             self.plugin_dialog.dialog.open()
 
-        card_image.on("click", open_dialog)
+        card.on("click", open_dialog)
 
 
 class PluginInstalledCard:
